@@ -1,0 +1,103 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id              String   @id @default(uuid())
+  email           String   @unique
+  password        String
+  role            String   @default("PATIENT")
+  createdAt       DateTime @default(now())
+
+  patientProfile  PatientProfile?
+  doctorProfile   DoctorProfile?
+}
+
+model PatientProfile {
+  id              String      @id @default(uuid())
+  name            String
+  phoneNumber     String
+  profileImgUrl   String?
+  userId          String      @unique
+  user            User        @relation(fields: [userId], references: [id])
+  height          Float?
+  weight          Float?
+  bloodType       String?
+
+  appointments Encounter[]
+}
+
+model DoctorProfile {
+  id              String      @id @default(uuid())
+  name            String
+  phoneNumber     String
+  profileImgUrl   String?
+  userId          String      @unique
+  user            User        @relation(fields: [userId], references: [id])
+  specialty       String?
+
+  regionId    String
+  region      Region  @relation(fields: [regionId], references: [id])
+
+  appointments    Encounter[]
+}
+
+model Encounter {
+  id                  String          @id @default(uuid())
+  date                DateTime
+  reason              String
+  notes               String?
+  statusTimeline      StatusUpdate[]
+  createdAt           DateTime        @default(now())
+
+  patientId           String
+  patient             PatientProfile  @relation(fields: [patientId], references: [id])
+
+  doctorId            String  
+  doctor              DoctorProfile   @relation(fields: [doctorId], references: [id])
+}
+
+model Region {
+  id              String      @id @default(uuid())
+  name            String      @unique
+  city            String
+  address         String
+  mapUrl          String?
+  regionImgUrl    String?
+  createdAt       DateTime    @default(now())
+
+  doctorProfiles  DoctorProfile[]
+}
+
+model StatusUpdate {
+  id             String         @id @default(uuid())
+  status         BookingStatus  @default(PENDING)
+  note           String?
+  createdAt      DateTime       @default(now())
+
+  encounterId    String
+  encounter      Encounter      @relation(fields: [encounterId], references: [id])
+}
+
+enum Role {
+  PATIENT
+  DOCTOR
+  ADMIN
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}

@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:16
+    container_name: ksclinic-db
+    restart: always
+    environment:
+      POSTGRES_USER: ksclinic_user
+      POSTGRES_PASSWORD: ks1234
+      POSTGRES_DB: ksclinic
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
