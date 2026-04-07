@@ -33,6 +33,7 @@ model PatientProfile {
   height          Float?
   weight          Float?
   bloodType       String?
+  dateOfBirth     DateTime?
 
   appointments Encounter[]
 }

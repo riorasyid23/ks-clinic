@@ -66,13 +66,27 @@ export const registerUser = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  const { email, password, confirmPassword } = req.body;
+  const { 
+    email,
+    password,
+    confirmPassword,
+
+    name,
+    phoneNumber,
+    profileImgUrl,
+    height,
+    weight,
+    bloodType,
+    dateOfBirth,
+  } = req.body;
 
   // Validate required fields
-  validateRequired({ email, password, confirmPassword }, [
+  validateRequired({ email, password, confirmPassword, name, phoneNumber }, [
     'email',
     'password',
     'confirmPassword',
+    'name',
+    'phoneNumber'
   ]);
 
   // Check if passwords match
@@ -102,6 +116,13 @@ export const registerUser = async (
       data: {
         email,
         password: hashedPassword,
+        patientProfile: {
+          create: {
+            name,
+            phoneNumber,
+            profileImgUrl,
+          }
+        }
       },
       include: {
         patientProfile: true,

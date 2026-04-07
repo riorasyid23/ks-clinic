@@ -5,6 +5,7 @@ import {
   invalidCredentials,
   resourceExists,
   databaseError,
+  notFound,
 } from '../utils/errorHelpers.ts';
 import { validateRequired } from '../utils/errorHelpers.ts';
 import { updateUserSchema, type UpdateUserInput } from '../schemas/userSchemas.ts';
@@ -45,60 +46,145 @@ export const getUserProfile = async (req: Request, res: Response): Promise<void>
 }
 
 export const updateUserProfile = async (req: Request, res: Response): Promise<void> => {
-  const userId = req.user!.userId;
+  const { userId } = req.params as { userId: string };
 
-  const dataToUpdate: any = {};
-
-  for (const key in req.body) {
-    if (req.body[key] !== undefined) {
-      dataToUpdate[key] = req.body[key];
-    }
+  if (!userId) {
+    missingField('Parameter User ID');
   }
 
-    // Validate request body with Zod
+  // Validate request body with Zod
   const validate = validateRequest(updateUserSchema);
-  const validated = validate(dataToUpdate);
+  const validated = validate(req.body);
   
-  const { name, phoneNumber, profileImgUrl, role, height, weight, bloodType, specialty } = validated;
+  const { name, phoneNumber, profileImgUrl, role, height, weight, bloodType, specialty, regionId } = validated as UpdateUserInput & { regionId?: string };
 
-  let updatedUser;
   try {
-    switch (role) {
-      case 'PATIENT':
-        // updatedUser = await prisma.patientProfile.update({
-        //   where: { userId: userId },
-        //   data: dataToUpdate,
-        // });
-        updatedUser = await prisma.user.update({
-          where: { id: userId },
-          data: {
-            // name,
-            // phoneNumber,
-            // profileImgUrl,
-            // height,
-            // weight,
-            // bloodType,
-          },
-        });
-        break;
-      case 'DOCTOR':
-        updatedUser = await prisma.doctorProfile.update({
-          where: { userId: userId },
-          data: dataToUpdate
-        });
-      case 'ADMIN':
-        updatedUser = await prisma.user.update({
-          where: { id: userId },
-          data: dataToUpdate
-        });
-        break;
+    // Get current user to check existing role and profile
+    const currentUser = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        patientProfile: true,
+        doctorProfile: true,
+      },
+    });
+
+    if (!currentUser) {
+      notFound('User');
     }
+
+    const currentRole = currentUser?.role;
+    const newRole = role ?? currentRole;
+    const isRoleChanging = newRole !== currentRole;
+
+    // Use transaction to ensure atomic operations
+    let updatedUser;
+    
+    updatedUser = await prisma.$transaction(async (tx) => {
+      // Step 1: Handle role transitions if role is changing
+      if (isRoleChanging) {
+        // Delete old profile based on current role
+        if (currentRole === 'PATIENT' && currentUser?.patientProfile) {
+          await tx.patientProfile.delete({
+            where: { userId },
+          });
+        } else if (currentRole === 'DOCTOR' && currentUser?.doctorProfile) {
+          await tx.doctorProfile.delete({
+            where: { userId },
+          });
+        }
+      }
+
+      // Step 2: Prepare profile data
+      const profileData: any = {};
+      if (name) profileData.name = name;
+      if (phoneNumber) profileData.phoneNumber = phoneNumber;
+      if (profileImgUrl) profileData.profileImgUrl = profileImgUrl;
+
+      // Step 3: Build user update data
+      const userUpdateData: any = {
+        role: newRole,
+      };
+
+      // Step 4: Handle profile creation/update based on new role
+      if (newRole === 'PATIENT') {
+        if (bloodType) profileData.bloodType = bloodType;
+        if (height) profileData.height = height;
+        if (weight) profileData.weight = weight;
+
+        if (isRoleChanging || !currentUser?.patientProfile) {
+          // Create new patient profile
+          userUpdateData.patientProfile = {
+            create: profileData,
+          };
+        } else {
+          // Update existing patient profile
+          userUpdateData.patientProfile = {
+            update: profileData,
+          };
+        }
+      } else if (newRole === 'DOCTOR') {
+        if (specialty) profileData.specialty = specialty;
+
+        if (!regionId && (isRoleChanging || !currentUser?.doctorProfile)) {
+          missingField('regionId is required when creating a Doctor profile');
+        }
+
+        if (isRoleChanging || !currentUser?.doctorProfile) {
+          // Create new doctor profile
+          userUpdateData.doctorProfile = {
+            create: {
+              ...profileData,
+              regionId: regionId || currentUser?.doctorProfile?.regionId,
+            },
+          };
+        } else {
+          // Update existing doctor profile
+          userUpdateData.doctorProfile = {
+            update: profileData,
+          };
+        }
+      }
+
+      // Step 5: Update user with new role and profile
+      const updatedUserResult = await tx.user.update({
+        where: { id: userId },
+        data: userUpdateData,
+        include: {
+          patientProfile: true,
+          doctorProfile: true,
+        },
+      });
+
+      return updatedUserResult;
+    });
+
+    res.status(200).json({
+      message: 'User profile updated successfully',
+      user: {
+        id: updatedUser.id,
+        email: updatedUser.email,
+        role: updatedUser.role,
+        profile:
+          updatedUser.role === 'PATIENT'
+            ? updatedUser.patientProfile
+            : updatedUser.doctorProfile,
+      },
+    });
+  } catch (error) {
+    databaseError(error as Error);
+  }
+};
+
+export const deleteUser = async (req: Request, res: Response): Promise<void> => {
+  const userId = req.user!.userId;
+
+  try {
+    await prisma.user.delete({ where: { id: userId } });
   } catch (error) {
     databaseError(error as Error);
   }
 
   res.status(200).json({
-    message: 'User profile updated successfully',
-    updatedUser,
+    message: 'User profile deleted successfully',
   });
 };
