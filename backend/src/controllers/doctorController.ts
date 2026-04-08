@@ -252,7 +252,7 @@ export const getAvailableAppointmentSlots = async (req: Request, res: Response):
             },
         });
 
-        const availableSlots = calculateAvailableSlots(
+        const slots = calculateAvailableSlots(
             schedule.startTime,
             schedule.endTime,
             schedule.slotDuration,
@@ -261,7 +261,8 @@ export const getAvailableAppointmentSlots = async (req: Request, res: Response):
 
         res.status(200).json({
             message: 'Available appointment slots retrieved successfully',
-            slots: availableSlots 
+            availableSlots: slots.availableSlots,
+            unavailableSlots: slots.unavailableSlots 
         });
     } catch (error) {
         if (isAppError(error)) {
