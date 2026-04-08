@@ -206,7 +206,7 @@ export const getAvailableAppointmentSlots = async (req: Request, res: Response):
     const dayOfWeek = newDate.getDay();
 
     if (!doctorProfileId) {
-        missingField('Query Parameter Doctor ID');
+        missingField('Query Parameter Doctor Profile ID');
     }
 
     if (!date) {
