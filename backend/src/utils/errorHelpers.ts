@@ -90,6 +90,17 @@ export const slotNotAvailable = (
   );
 };
 
+export const invalidAppointment = (
+  message: string,
+  details?: Record<string, any>
+): never => {
+  throw new AppError(
+    ErrorCode.INVALID_APPOINTMENT_TIME,
+    message,
+    {details}
+  )
+}
+
 export const appointmentConflict = (
   message = 'Appointment conflicts with existing schedule',
   details?: Record<string, any>

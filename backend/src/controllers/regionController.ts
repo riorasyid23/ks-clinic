@@ -7,12 +7,16 @@ import {
 } from '../utils/errorHelpers.ts';
 import { validateRequest } from '../utils/validateRequest.ts';
 import { createRegionSchema } from '../schemas/regionSchemas.ts';
+import { isAppError } from '../utils/errors.ts';
 
 export const getRegions = async (req: Request, res: Response): Promise<void> => {
   let regions;
   try {
     regions = await prisma.region.findMany();
   } catch (error) {
+    if (isAppError(error)) {
+        throw error;
+    }
     databaseError(error as Error);
   }
 
@@ -36,6 +40,9 @@ export const createRegion = async (req: Request, res: Response): Promise<void> =
       where: { name },
     });
   } catch (error) {
+    if (isAppError(error)) {
+        throw error;
+    }
     databaseError(error as Error);
   }
 
@@ -56,6 +63,9 @@ export const createRegion = async (req: Request, res: Response): Promise<void> =
       },
     });
   } catch (error) {
+    if (isAppError(error)) {
+        throw error;
+    }
     databaseError(error as Error);
   }
 

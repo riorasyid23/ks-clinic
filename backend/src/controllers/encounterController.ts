@@ -7,10 +7,15 @@ import {
   databaseError,
   notFound,
   validationFailed,
-  unauthorized
+  unauthorized,
+  slotNotAvailable,
+  invalidAppointment
 } from '../utils/errorHelpers.ts';
 import { validateRequest } from '../utils/validateRequest.ts';
 import { createPatientBookingSchema } from '../schemas/encounterSchemas.ts';
+import { addMinutes, differenceInMinutes, format, parse } from 'date-fns';
+import { AppError, isAppError } from '../utils/errors.ts';
+import type { Encounter } from '../generated/prisma/client.ts';
 
 export const getEncoPatients = async (req: Request, res: Response): Promise<void> => {
     const userId = req.user?.userId
@@ -21,22 +26,43 @@ export const getEncoPatients = async (req: Request, res: Response): Promise<void
     }
 
     try {
-        const bookings = await prisma.encounter.findMany({
+        // Get Patient Profile
+        const patientProfile = await prisma.patientProfile.findUnique({
             where: {
-                patientId: userId as string
+                userId: userId as string
+            },
+            include: {
+                appointments: true
             }
         })
 
-        if(!bookings){
+        const bookingAppointments = patientProfile?.appointments.map((a) => ({
+            id: a.id,
+            date: a.date,
+            startTime: a.startTime,
+            endTime: a.endTime,
+            currentStatus: a.currentStatus,
+            reason: a.reason,
+            notes: a.notes,
+            patientId: a.patientId,
+            doctorId: a.doctorId,
+            createdAt: a.createdAt
+        }))
+        
+
+        if(bookingAppointments?.length === 0){
             return notFound('Booking Patients')
         }
 
         res.status(200).json({
             message: 'Bookings Data retrieved!',
-            bookings
+            bookings: bookingAppointments
         })
     } catch (error) {
-        databaseError(error as Error)
+        if (isAppError(error)) {
+            throw error;
+        }
+        databaseError(error as Error);
     }
 }
 
@@ -49,22 +75,41 @@ export const getEncoDoctors = async (req: Request, res: Response): Promise<void>
     }
 
     try {
-        const bookings = await prisma.encounter.findMany({
+        const doctorProfile = await prisma.doctorProfile.findUnique({
             where: {
-                doctorId: userId as string
+                userId: userId as string
+            },
+            include: {
+                appointments: true
             }
         })
 
-        if(!bookings){
+        const bookingAppointments = doctorProfile?.appointments.map((a) => ({
+            id: a.id,
+            date: a.date,
+            startTime: a.startTime,
+            endTime: a.endTime,
+            currentStatus: a.currentStatus,
+            reason: a.reason,
+            notes: a.notes,
+            patientId: a.patientId,
+            doctorId: a.doctorId,
+            createdAt: a.createdAt
+        }))
+
+        if(bookingAppointments?.length === 0){
             return notFound('Doctor Appointments')
         }
 
         res.status(200).json({
             message: 'Appointments Data retrieved!',
-            bookings
+            bookings: bookingAppointments
         })
     } catch (error) {
-        databaseError(error as Error)
+        if (isAppError(error)) {
+            throw error;
+        }
+        databaseError(error as Error);
     }
 }
 
@@ -78,27 +123,98 @@ export const createPatientBooking = async (req: Request, res: Response): Promise
     const validate = validateRequest(createPatientBookingSchema)
     const validated = validate(req.body)
 
-    const { date, reason, notes, patientId, doctorId } = validated
+    const { date, startTime, reason, notes, doctorProfileId } = validated
 
     try {
-        // Check Available Slots TODO
-
-        // Create Booking
-        const booking = await prisma.encounter.create({
-            data: {
-                date: new Date(date as string),
-                reason,
-                notes: notes ?? '',
-                patientId,
-                doctorId
+        const patientProfile = await prisma.patientProfile.findUnique({
+            where: {
+                userId: userId as string
             }
         })
 
+        if(!patientProfile){
+            return notFound('Patient Profile')
+        }
+
+        // Check Available Slots
+        const existingBooking = await prisma.encounter.findFirst({
+            where: {
+                doctorId: doctorProfileId,
+                date: new Date(date as string),
+                startTime: startTime,
+                currentStatus: { not: 'CANCELLED' }
+            }
+        })
+
+
+        if(existingBooking){
+            return resourceExists('Someone booking this slot')
+        }
+
+        // Create Booking
+        const result = await prisma.$transaction(async (tx) => {
+
+            const schedule = await prisma.doctorSchedule.findFirst({
+                where: { 
+                    doctorId: doctorProfileId,
+                    dayOfWeek: new Date(date as string).getDay()
+                }
+            });
+
+            if (!schedule) {
+                return slotNotAvailable('Doctor does not work on this day');
+            }
+
+            const bookStartReqTime = parse(startTime, 'HH:mm', new Date());
+            const endDateTime = addMinutes(bookStartReqTime, schedule.slotDuration);
+            const bookEndReqTime = format(endDateTime, 'HH:mm');
+
+            const scheduleStart = parse(schedule.startTime, 'HH:mm', new Date())
+            const scheduleEnd = parse(schedule.endTime, 'HH:mm', new Date())
+
+            if (bookStartReqTime < scheduleStart || bookStartReqTime >= scheduleEnd) {
+                return slotNotAvailable(`Requested time is outside of doctor's working hours.`)
+            }
+
+            const diffInMinutes = differenceInMinutes(bookStartReqTime, scheduleStart);
+            if (diffInMinutes % schedule.slotDuration !== 0) {
+                return invalidAppointment('Invalid slot interval.')
+            }
+
+            // Create the Encounter
+            const booking = await tx.encounter.create({
+                data: {
+                    date: new Date(date as string),
+                    startTime,
+                    endTime: bookEndReqTime,
+                    reason,
+                    notes: notes ?? '',
+                    patientId: patientProfile.id,
+                    doctorId: doctorProfileId,
+                    currentStatus: 'PENDING',
+                    statusTimeline: {
+                        create: {
+                            status: 'PENDING',
+                            note: 'Initial booking created by patient'
+                        }
+                    }
+                },
+                include: {
+                    statusTimeline: true
+                }
+            });
+
+            return booking;
+        });
+
         res.status(201).json({
             message: "Booking is created!",
-            booking
+            booking: result
         })
     } catch (error) {
-        databaseError(error as Error)
+        if (isAppError(error)) {
+            throw error;
+        }
+        databaseError(error as Error);
     }
 }

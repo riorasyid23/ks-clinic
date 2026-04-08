@@ -2,10 +2,10 @@ import { z } from 'zod';
 
 export const createPatientBookingSchema = z.object({
     date: z.string().min(1, 'Date is Required'),
+    startTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, 'Invalid time format (HH:mm)'),
     reason: z.string().min(1, 'Reason is Required'),
     notes: z.string().optional(),
-    patientId: z.string().min(1, 'Patient ID is Required'),
-    doctorId: z.string().min(1, 'Doctor ID is Required')
+    doctorProfileId: z.string().min(1, 'Doctor Profile ID is Required')
 })
 
 export type CreatePatientBooking = z.infer<typeof createPatientBookingSchema>;

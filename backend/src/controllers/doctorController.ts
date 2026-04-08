@@ -12,6 +12,7 @@ import { validateRequest } from '../utils/validateRequest.ts';
 import { createDoctorScheduleSchema } from '../schemas/userSchemas.ts';
 import { addMinutes, format, parse } from 'date-fns';
 import { calculateAvailableSlots } from '../helpers/calculateAvailableSlots.ts';
+import { isAppError } from '../utils/errors.ts';
 
 export const getDoctorByRegionId = async (req: Request, res: Response): Promise<void> => {
   const { regionId } = req.query;
@@ -30,6 +31,9 @@ export const getDoctorByRegionId = async (req: Request, res: Response): Promise<
       },
     });
   } catch (error) {
+    if (isAppError(error)) {
+        throw error;
+    }
     databaseError(error as Error);
   }
 
@@ -66,6 +70,9 @@ export const getDoctorSchedule = async (req: Request, res: Response): Promise<vo
             }
         });
     } catch (error) {
+        if (isAppError(error)) {
+            throw error;
+        }
         databaseError(error as Error);
     }
 
@@ -151,6 +158,9 @@ export const addDoctorSchedules = async (req: Request, res: Response): Promise<v
             }
         })
     } catch (error) {
+        if (isAppError(error)) {
+            throw error;
+        }
         databaseError(error as Error);
     }
 }
@@ -196,6 +206,9 @@ export const getDoctorSchedules = async (req: Request, res: Response): Promise<v
         })
         
     } catch (error) {
+        if (isAppError(error)) {
+            throw error;
+        }
         databaseError(error as Error)
     }
 }
@@ -245,26 +258,15 @@ export const getAvailableAppointmentSlots = async (req: Request, res: Response):
             schedule.slotDuration,
             existingBookings
         );
-        // let currentTime = parse(schedule.startTime, 'HH:mm', new Date());
-        // const endTime = parse(schedule.endTime, 'HH:mm', new Date());
-
-        // while (currentTime < endTime) {
-        //     const timeString = format(currentTime, 'HH:mm');
-
-        //     const isBooked = existingBookings.some(booking => format(booking.date, 'HH:mm') === timeString);
-
-        //     if (!isBooked) {
-        //         availableSlots.push(timeString);
-        //     }
-
-        //     currentTime = addMinutes(currentTime, schedule.slotDuration);
-        // }
 
         res.status(200).json({
             message: 'Available appointment slots retrieved successfully',
             slots: availableSlots 
         });
     } catch (error) {
+        if (isAppError(error)) {
+            throw error;
+        }
         databaseError(error as Error);
     }
 }

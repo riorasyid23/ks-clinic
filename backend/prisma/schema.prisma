@@ -68,6 +68,8 @@ model DoctorSchedule {
 model Encounter {
   id                  String          @id @default(uuid())
   date                DateTime
+  startTime           String // 09:00
+  endTime             String // 09:30
   reason              String
   notes               String?
   currentStatus       BookingStatus   @default(PENDING)

@@ -9,6 +9,6 @@ const router = express.Router();
 
 router.get('/profile', authJWT, asyncHandler(getUserProfile));
 router.put('/:userId', authJWT, requireAdmin, asyncHandler(updateUserProfile));
-router.delete('/delete', authJWT, requireAdmin, asyncHandler(deleteUser));
+router.delete('/delete/:userId', authJWT, requireAdmin, asyncHandler(deleteUser));
 
 export default router;

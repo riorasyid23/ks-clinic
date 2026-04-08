@@ -9,6 +9,7 @@ import {
   databaseError,
 } from '../utils/errorHelpers.ts';
 import { validateRequired } from '../utils/errorHelpers.ts';
+import { isAppError } from '../utils/errors.ts';
 
 export const login = async (req: Request, res: Response): Promise<void> => {
   const { email, password } = req.body;
@@ -27,6 +28,9 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       },
     });
   } catch (error) {
+    if (isAppError(error)) {
+        throw error;
+    }
     databaseError(error as Error);
   }
 
@@ -99,6 +103,9 @@ export const registerUser = async (
   try {
     existingUser = await prisma.user.findUnique({ where: { email } });
   } catch (error) {
+    if (isAppError(error)) {
+        throw error;
+    }
     databaseError(error as Error);
   }
 
@@ -130,6 +137,9 @@ export const registerUser = async (
       },
     });
   } catch (error) {
+    if (isAppError(error)) {
+        throw error;
+    }
     databaseError(error as Error);
   }
 

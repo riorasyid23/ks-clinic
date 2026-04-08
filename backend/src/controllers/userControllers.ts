@@ -10,6 +10,7 @@ import {
 import { validateRequired } from '../utils/errorHelpers.ts';
 import { updateUserSchema, type UpdateUserInput } from '../schemas/userSchemas.ts';
 import { validateRequest } from '../utils/validateRequest.ts';
+import { isAppError } from '../utils/errors.ts';
 
 // For Managing User Profile
 
@@ -26,6 +27,9 @@ export const getUserProfile = async (req: Request, res: Response): Promise<void>
       },
     });
   } catch (error) {
+    if (isAppError(error)) {
+        throw error;
+    }
     databaseError(error as Error);
   }
 
@@ -171,16 +175,22 @@ export const updateUserProfile = async (req: Request, res: Response): Promise<vo
       },
     });
   } catch (error) {
+    if (isAppError(error)) {
+        throw error;
+    }
     databaseError(error as Error);
   }
 };
 
 export const deleteUser = async (req: Request, res: Response): Promise<void> => {
-  const userId = req.user!.userId;
+  const { userId } = req.params;
 
   try {
-    await prisma.user.delete({ where: { id: userId } });
+    await prisma.user.delete({ where: { id: userId as string } });
   } catch (error) {
+    if (isAppError(error)) {
+        throw error;
+    }
     databaseError(error as Error);
   }
 
