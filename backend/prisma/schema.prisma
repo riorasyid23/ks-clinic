@@ -46,6 +46,7 @@ model DoctorProfile {
   userId          String      @unique
   user            User        @relation(fields: [userId], references: [id])
   specialty       String?
+  schedule        DoctorSchedule[]
 
   regionId    String
   region      Region  @relation(fields: [regionId], references: [id])
@@ -53,11 +54,23 @@ model DoctorProfile {
   appointments    Encounter[]
 }
 
+model DoctorSchedule {
+  id          String        @id @default(uuid())
+  dayOfWeek   Int           // 0 for Sunday, 1 for Monday, etc.
+  startTime   String        // e.g., "08:00"
+  endTime     String        // e.g., "12:00"
+  slotDuration Int          @default(30) // minutes per patient
+
+  doctorId    String
+  doctor      DoctorProfile @relation(fields: [doctorId], references: [id])
+}
+
 model Encounter {
   id                  String          @id @default(uuid())
   date                DateTime
   reason              String
   notes               String?
+  currentStatus       BookingStatus   @default(PENDING)
   statusTimeline      StatusUpdate[]
   createdAt           DateTime        @default(now())
 

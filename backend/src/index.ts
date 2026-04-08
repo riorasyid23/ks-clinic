@@ -4,6 +4,7 @@ import authRoutes from './routes/authRoutes.ts';
 import { errorHandler, correlationIdMiddleware } from './middleware/errorHandler.ts';
 import regionRoutes from './routes/regionRoutes.ts';
 import userRoutes from './routes/userRoutes.ts';
+import doctorRoutes from './routes/doctorRoutes.ts'
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -18,6 +19,7 @@ app.use(correlationIdMiddleware);
 app.use('/auth', authRoutes);
 app.use('/users', userRoutes);
 app.use('/regions', regionRoutes);
+app.use('/doctors', doctorRoutes)
 
 // Hello World Endpoint
 app.get('/', (req: Request, res: Response) => {

@@ -12,4 +12,12 @@ export const updateUserSchema = z.object({
   role: z.enum(['PATIENT', 'DOCTOR', 'ADMIN']).optional(),
 });
 
+export const createDoctorScheduleSchema = z.object({
+  dayOfWeek: z.enum(['0', '1', '2', '3', '4', '5', '6'], 'Invalid day of week (0-6)'),
+  startTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, 'Invalid time format (HH:mm)'),
+  endTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, 'Invalid time format (HH:mm)'),
+  duration: z.number().positive('Duration must be a positive number'),
+});
+
 export type UpdateUserInput = z.infer<typeof updateUserSchema>;
+export type CreateDoctorScheduleInput = z.infer<typeof createDoctorScheduleSchema>;
