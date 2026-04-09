@@ -1,9 +1,10 @@
 import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class DioClient {
   static final Dio _dio = Dio(
     BaseOptions(
-      baseUrl: 'https://api.medisify.com/v1', // Placeholder base url
+      baseUrl: 'http://localhost:8080',
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 10),
       headers: {
@@ -12,8 +13,13 @@ class DioClient {
     ),
   )..interceptors.add(
       InterceptorsWrapper(
-        onRequest: (options, handler) {
-          // Add token here if available
+        onRequest: (options, handler) async {
+          // Attach saved JWT token to every request
+          final prefs = await SharedPreferences.getInstance();
+          final token = prefs.getString('auth_token');
+          if (token != null && token.isNotEmpty) {
+            options.headers['Authorization'] = 'Bearer $token';
+          }
           return handler.next(options);
         },
         onResponse: (response, handler) {

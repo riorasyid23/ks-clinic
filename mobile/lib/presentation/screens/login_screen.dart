@@ -1,22 +1,64 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/primary_button.dart';
+import '../providers/auth_providers.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
   bool _isPasswordVisible = false;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  void _handleLogin() {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill in all fields')),
+      );
+      return;
+    }
+
+    ref.read(authProvider.notifier).login(email, password);
+  }
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+
+    // Listen to auth state changes
+    ref.listen<AuthState>(authProvider, (previous, next) {
+      if (next is AuthAuthenticated) {
+        context.go('/home');
+      } else if (next is AuthError) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(next.message),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    });
+
+    final authState = ref.watch(authProvider);
+    final isLoading = authState is AuthLoading;
 
     return Scaffold(
       backgroundColor: AppColors.surface,
@@ -88,11 +130,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 48),
 
-                  // Form
-                  const CustomTextField(
+                  // Email field
+                  CustomTextField(
                     label: 'Work Email',
+                    controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
-                    prefixIcon: Icon(
+                    prefixIcon: const Icon(
                       Icons.alternate_email,
                       color: AppColors.onSurfaceVariant,
                     ),
@@ -105,6 +148,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     children: [
                       CustomTextField(
                         label: 'Password',
+                        controller: _passwordController,
                         obscureText: !_isPasswordVisible,
                         prefixIcon: const Icon(
                           Icons.lock_outline,
@@ -151,13 +195,14 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 32),
 
-                  PrimaryButton(
-                    text: 'Login',
-                    icon: Icons.arrow_forward,
-                    onPressed: () {
-                      context.go('/home');
-                    },
-                  ),
+                  // Login button (shows loading state)
+                  isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : PrimaryButton(
+                          text: 'Login',
+                          icon: Icons.arrow_forward,
+                          onPressed: _handleLogin,
+                        ),
 
                   const SizedBox(height: 40),
 

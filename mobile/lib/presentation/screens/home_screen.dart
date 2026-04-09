@@ -1,91 +1,36 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:medisify/presentation/providers/auth_providers.dart';
+import 'package:medisify/presentation/widgets/app_bar_main.dart';
 import '../../core/theme/app_colors.dart';
 import '../widgets/bottom_nav_bar.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authProvider);
     final textTheme = Theme.of(context).textTheme;
+
+    final user = authState is AuthAuthenticated ? authState.user : null;
+    final profile = user?.profile;
+    final displayName = profile?.name ?? 'Patient';
 
     return Scaffold(
       backgroundColor: AppColors.surface,
-      appBar: AppBar(
-        title: Text(
-          'Medisify',
-          style: textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w900,
-            color: AppColors.primaryContainer,
-            letterSpacing: -0.5,
-          ),
-        ),
-        centerTitle: false,
-        backgroundColor: AppColors.surface.withOpacity(0.9),
-        elevation: 0,
-        surfaceTintColor: Colors.transparent,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.medical_services,
-            color: AppColors.primaryContainer,
-          ),
-          onPressed: () {},
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: AppColors.primaryFixed, width: 2),
-                color: AppColors.surfaceContainerHigh,
-              ),
-              child: const Icon(
-                Icons.person,
-                color: AppColors.primaryContainer,
-              ),
-            ),
-          ),
-        ],
-      ),
+      appBar: AppBarMain(),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildGreeting(textTheme),
+              _buildGreeting(textTheme, displayName),
               const SizedBox(height: 32),
               _buildCTA(),
               const SizedBox(height: 32),
               _buildNextAppointment(textTheme),
-              const SizedBox(height: 32),
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  // If screen is wide enough, put them side by side
-                  if (constraints.maxWidth > 500) {
-                    return Row(
-                      children: [
-                        Expanded(child: _buildServices(textTheme)),
-                        const SizedBox(width: 24),
-                        Expanded(child: _buildRecentDoctors(textTheme)),
-                      ],
-                    );
-                  }
-                  // Otherwise stack them
-                  return Column(
-                    children: [
-                      _buildServices(textTheme),
-                      const SizedBox(height: 24),
-                      _buildRecentDoctors(textTheme),
-                    ],
-                  );
-                },
-              ),
-              const SizedBox(height: 32),
-              _buildVitality(textTheme),
               const SizedBox(height: 48), // Padding for bottom nav
             ],
           ),
@@ -95,7 +40,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildGreeting(TextTheme textTheme) {
+  Widget _buildGreeting(TextTheme textTheme, String displayName) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -109,7 +54,7 @@ class HomeScreen extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          'Hello, Patient',
+          'Hello, $displayName',
           style: textTheme.displaySmall?.copyWith(
             fontWeight: FontWeight.w900,
             color: AppColors.onSurface,
@@ -140,7 +85,7 @@ class HomeScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(100),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.15),
+            color: AppColors.primary.withValues(alpha: 0.15),
             blurRadius: 16,
             offset: const Offset(0, 8),
           ),
@@ -190,7 +135,9 @@ class HomeScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.secondaryContainer,
         borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: AppColors.outlineVariant.withOpacity(0.15)),
+        border: Border.all(
+          color: AppColors.outlineVariant.withValues(alpha: 0.15),
+        ),
       ),
       child: Stack(
         clipBehavior: Clip.none,
@@ -201,7 +148,7 @@ class HomeScreen extends StatelessWidget {
             child: Icon(
               Icons.event_available,
               size: 100,
-              color: AppColors.primary.withOpacity(0.05),
+              color: AppColors.primary.withValues(alpha: 0.05),
             ),
           ),
           Column(
@@ -277,10 +224,11 @@ class HomeScreen extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 24),
-              Row(
+              Wrap(
+                spacing: 12,
+                runSpacing: 8,
                 children: [
                   _buildTag(Icons.calendar_today, 'Oct 24, 2023', textTheme),
-                  const SizedBox(width: 12),
                   _buildTag(Icons.schedule, '09:30 AM', textTheme),
                 ],
               ),
@@ -493,7 +441,9 @@ class HomeScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.secondaryContainer,
         borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: AppColors.outlineVariant.withOpacity(0.15)),
+        border: Border.all(
+          color: AppColors.outlineVariant.withValues(alpha: 0.15),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -503,7 +453,7 @@ class HomeScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(icon, color: color, size: 20),

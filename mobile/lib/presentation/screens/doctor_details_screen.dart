@@ -1,13 +1,40 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
+import '../../data/models/doctor_detail_model.dart';
+import '../providers/search_providers.dart';
 
-class DoctorDetailsScreen extends StatelessWidget {
-  const DoctorDetailsScreen({super.key});
+class DoctorDetailsScreen extends ConsumerWidget {
+  final String doctorId;
+  const DoctorDetailsScreen({super.key, required this.doctorId});
+
+  String _getDayName(int day) {
+    switch (day) {
+      case 1:
+        return 'Monday';
+      case 2:
+        return 'Tuesday';
+      case 3:
+        return 'Wednesday';
+      case 4:
+        return 'Thursday';
+      case 5:
+        return 'Friday';
+      case 6:
+        return 'Saturday';
+      case 0:
+      case 7:
+        return 'Sunday';
+      default:
+        return 'Unknown';
+    }
+  }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final textTheme = Theme.of(context).textTheme;
+    final doctorAsync = ref.watch(doctorDetailsProvider(doctorId));
 
     return Scaffold(
       backgroundColor: AppColors.surface,
@@ -46,66 +73,90 @@ class DoctorDetailsScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
+      body: doctorAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, stack) => Center(
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _buildIdentity(textTheme),
-              const SizedBox(height: 40),
-              _buildContactInfo(textTheme),
-              const SizedBox(height: 40),
-              _buildSchedule(textTheme),
+              const Icon(Icons.error_outline, size: 48, color: AppColors.error),
+              const SizedBox(height: 16),
+              Text('Error: ${error.toString()}'),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => ref.invalidate(doctorDetailsProvider(doctorId)),
+                child: const Text('Retry'),
+              ),
             ],
+          ),
+        ),
+        data: (doctor) => SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildIdentity(textTheme, doctor),
+                const SizedBox(height: 40),
+                _buildContactInfo(textTheme, doctor),
+                const SizedBox(height: 40),
+                _buildSchedule(textTheme, doctor),
+              ],
+            ),
           ),
         ),
       ),
-      bottomNavigationBar: Container(
-        padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
-        decoration: BoxDecoration(
-          color: AppColors.surface.withValues(alpha: 0.9),
-          border: Border(
-            top: BorderSide(
-              color: AppColors.outlineVariant.withValues(alpha: 0.15),
-            ),
-          ),
-        ),
-        child: ElevatedButton(
-          onPressed: () {},
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            foregroundColor: AppColors.primaryContainer,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            elevation: 0,
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.calendar_today,
-                size: 20,
-                color: AppColors.white,
+      bottomNavigationBar: doctorAsync.when(
+        data: (doctor) => Container(
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+          decoration: BoxDecoration(
+            color: AppColors.surface.withValues(alpha: 0.9),
+            border: Border(
+              top: BorderSide(
+                color: AppColors.outlineVariant.withValues(alpha: 0.15),
               ),
-              const SizedBox(width: 8),
-              Text(
-                'Book Appointment',
-                style: textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.white,
+            ),
+          ),
+          child: ElevatedButton(
+            onPressed: () {
+              // TODO: Navigation to booking page
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 0,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.calendar_today,
+                  size: 20,
+                  color: Colors.white,
                 ),
-              ),
-            ],
+                const SizedBox(width: 8),
+                Text(
+                  'Book Appointment',
+                  style: textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
+        loading: () => const SizedBox.shrink(),
+        error: (_, _) => const SizedBox.shrink(),
       ),
     );
   }
 
-  Widget _buildIdentity(TextTheme textTheme) {
+  Widget _buildIdentity(TextTheme textTheme, DoctorDetail doctor) {
     return Row(
       children: [
         Container(
@@ -129,7 +180,7 @@ class DoctorDetailsScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Dr. Stone Senku',
+                doctor.name,
                 style: textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w900,
                   color: AppColors.onSurface,
@@ -137,7 +188,7 @@ class DoctorDetailsScreen extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                'Surgery Department',
+                doctor.specialty,
                 style: textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                   color: AppColors.primary,
@@ -150,7 +201,7 @@ class DoctorDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildContactInfo(TextTheme textTheme) {
+  Widget _buildContactInfo(TextTheme textTheme, DoctorDetail doctor) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -169,16 +220,18 @@ class DoctorDetailsScreen extends StatelessWidget {
         _buildContactCard(
           icon: Icons.mail_outline,
           title: 'EMAIL',
-          value: 'senku@ksclinic.com',
+          value: doctor.email,
           textTheme: textTheme,
         ),
-        const SizedBox(height: 12),
-        _buildContactCard(
-          icon: Icons.call_outlined,
-          title: 'PHONE',
-          value: '+62 812 3123 126',
-          textTheme: textTheme,
-        ),
+        if (doctor.phone != null && doctor.phone!.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          _buildContactCard(
+            icon: Icons.call_outlined,
+            title: 'PHONE',
+            value: doctor.phone!,
+            textTheme: textTheme,
+          ),
+        ],
       ],
     );
   }
@@ -242,31 +295,23 @@ class DoctorDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSchedule(TextTheme textTheme) {
+  Widget _buildSchedule(TextTheme textTheme, DoctorDetail doctor) {
+    if (doctor.schedule.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 4.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'WEEKLY SCHEDULE',
-                style: textTheme.labelSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.outlineVariant,
-                  letterSpacing: 1.5,
-                ),
-              ),
-              Text(
-                'Next available: Monday',
-                style: textTheme.labelSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.secondary,
-                ),
-              ),
-            ],
+          child: Text(
+            'WEEKLY SCHEDULE',
+            style: textTheme.labelSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: AppColors.outlineVariant,
+              letterSpacing: 1.5,
+            ),
           ),
         ),
         const SizedBox(height: 16),
@@ -279,29 +324,24 @@ class DoctorDetailsScreen extends StatelessWidget {
             ),
           ),
           child: Column(
-            children: [
-              _buildScheduleRow('Monday', '08:00 - 15:00', '30 MIN', textTheme),
-              Divider(
-                height: 1,
-                color: AppColors.outlineVariant.withValues(alpha: 0.15),
-              ),
-              _buildScheduleRow(
-                'Tuesday',
-                '09:00 - 16:00',
-                '30 MIN',
-                textTheme,
-              ),
-              Divider(
-                height: 1,
-                color: AppColors.outlineVariant.withValues(alpha: 0.15),
-              ),
-              _buildScheduleRow(
-                'Wednesday',
-                '09:00 - 16:00',
-                '30 MIN',
-                textTheme,
-              ),
-            ],
+            children: List.generate(doctor.schedule.length, (index) {
+              final slot = doctor.schedule[index];
+              return Column(
+                children: [
+                  _buildScheduleRow(
+                    _getDayName(slot.dayOfWeek),
+                    '${slot.startTime} - ${slot.endTime}',
+                    '${slot.slotDuration} MIN',
+                    textTheme,
+                  ),
+                  if (index < doctor.schedule.length - 1)
+                    Divider(
+                      height: 1,
+                      color: AppColors.outlineVariant.withValues(alpha: 0.15),
+                    ),
+                ],
+              );
+            }),
           ),
         ),
       ],

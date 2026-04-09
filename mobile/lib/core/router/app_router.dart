@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../presentation/screens/login_screen.dart';
@@ -8,11 +7,16 @@ import '../../presentation/screens/home_screen.dart';
 import '../../presentation/screens/search_appointments_screen.dart';
 import '../../presentation/screens/my_bookings_screen.dart';
 import '../../presentation/screens/doctor_details_screen.dart';
+import '../../presentation/screens/splash_screen.dart';
 
 class AppRouter {
   static final router = GoRouter(
-    initialLocation: '/login',
+    initialLocation: '/',
     routes: [
+      GoRoute(
+        path: '/',
+        builder: (context, state) => const SplashScreen(),
+      ),
       GoRoute(
         path: '/login',
         builder: (context, state) => const LoginScreen(),
@@ -38,8 +42,11 @@ class AppRouter {
         builder: (context, state) => const MyBookingsScreen(),
       ),
       GoRoute(
-        path: '/doctor-details',
-        builder: (context, state) => const DoctorDetailsScreen(),
+        path: '/doctor-details/:doctorId',
+        builder: (context, state) {
+          final doctorId = state.pathParameters['doctorId']!;
+          return DoctorDetailsScreen(doctorId: doctorId);
+        },
       ),
     ],
   );
