@@ -9,7 +9,8 @@ import {
   validationFailed,
   unauthorized,
   slotNotAvailable,
-  invalidAppointment
+  invalidAppointment,
+  operationNotAllowed
 } from '../utils/errorHelpers.ts';
 import { validateRequest } from '../utils/validateRequest.ts';
 import { createPatientBookingSchema } from '../schemas/encounterSchemas.ts';
@@ -42,10 +43,10 @@ export const getEncoPatients = async (req: Request, res: Response): Promise<void
             startTime: a.startTime,
             endTime: a.endTime,
             currentStatus: a.currentStatus,
-            reason: a.reason,
-            notes: a.notes,
-            patientId: a.patientId,
-            doctorId: a.doctorId,
+            // reason: a.reason,
+            // notes: a.notes,
+            // patientId: a.patientId,
+            // doctorId: a.doctorId,
             createdAt: a.createdAt
         }))
         
@@ -90,10 +91,10 @@ export const getEncoDoctors = async (req: Request, res: Response): Promise<void>
             startTime: a.startTime,
             endTime: a.endTime,
             currentStatus: a.currentStatus,
-            reason: a.reason,
-            notes: a.notes,
-            patientId: a.patientId,
-            doctorId: a.doctorId,
+            // reason: a.reason,
+            // notes: a.notes,
+            // patientId: a.patientId,
+            // doctorId: a.doctorId,
             createdAt: a.createdAt
         }))
 
@@ -110,6 +111,40 @@ export const getEncoDoctors = async (req: Request, res: Response): Promise<void>
             throw error;
         }
         databaseError(error as Error);
+    }
+}
+
+export const getEncoDetails = async (req: Request, res: Response): Promise<void> => {
+    const { encounterId } = req.params
+
+    if(!encounterId){
+        return missingField('Parameter Encounter ID')
+    }
+
+    try {
+        const encounter = await prisma.encounter.findUnique({
+            where: {
+                id: encounterId as string
+            },
+            include: {
+                statusTimeline: true
+            }
+        })
+
+        if(!encounter){
+            return notFound("Appointment Data")
+        }
+
+        res.status(200).json({
+            message: "Appointment data found!",
+            details: encounter
+        })
+        
+    } catch (error) {
+        if(isAppError(error)){
+            throw error
+        }
+        databaseError(error as Error)
     }
 }
 
@@ -195,7 +230,8 @@ export const createPatientBooking = async (req: Request, res: Response): Promise
                     statusTimeline: {
                         create: {
                             status: 'PENDING',
-                            note: 'Initial booking created by patient'
+                            createdBy: `${role}-${userId}`,
+                            note: `Initial booking created by ${role.toLowerCase()}`
                         }
                     }
                 },
@@ -216,5 +252,79 @@ export const createPatientBooking = async (req: Request, res: Response): Promise
             throw error;
         }
         databaseError(error as Error);
+    }
+}
+
+export const cancelAppointment = async (req: Request, res: Response): Promise<void> => {
+    const userId = req.user?.userId
+    const role = req.user?.role
+    const { encounterId } = req.params
+
+    if(!encounterId){
+        return missingField("Parameter Encounter ID")
+    }
+
+    try {
+        const encounter = await prisma.encounter.findUnique({
+            where: {
+                id: encounterId as string,
+            },
+            include: {
+                statusTimeline: true
+            }
+        })
+
+        if(!encounter){
+            return notFound("Encounter Data")
+        }
+
+        const isConfirmed = encounter.statusTimeline.some((e) => 
+            e.status === 'CONFIRMED' || 
+            e.status === 'COMPLETED' ||
+            e.status === 'CANCELLED'
+        )
+
+        if(isConfirmed){
+            return operationNotAllowed('Cannot cancelled a confirmed/completed or already cancelled appointment')
+        }
+
+        const result = await prisma.$transaction(async (tx) => {
+            const currentAppointment = await tx.encounter.update({
+                where: {
+                    id: encounter.id
+                },
+                data: {
+                    currentStatus: 'CANCELLED',
+                },
+                include: {
+                    statusTimeline: true
+                }
+            })
+
+            const statusUpdate = await tx.statusUpdate.create({
+                data: {
+                    encounterId: encounter.id,
+                    createdBy: `${role}-${userId}`,
+                    status: 'CANCELLED',
+                    note: req.body.note ?? ""
+                }
+            })
+
+            currentAppointment.statusTimeline.push(statusUpdate)
+
+            return currentAppointment
+        })
+
+
+
+        res.status(201).json({
+            message: "Appointment is Cancelled!",
+            result,
+        })
+    } catch (error) {
+        if(isAppError(error)){
+            throw error
+        }
+        databaseError(error as Error)
     }
 }

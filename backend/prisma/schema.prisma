@@ -99,6 +99,7 @@ model StatusUpdate {
   id             String         @id @default(uuid())
   status         BookingStatus  @default(PENDING)
   note           String?
+  createdBy      String?
   createdAt      DateTime       @default(now())
 
   encounterId    String
