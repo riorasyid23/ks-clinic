@@ -7,6 +7,7 @@ export const updateUserSchema = z.object({
   height: z.number().positive('Height must be a positive number').optional(),
   weight: z.number().positive('Weight must be a positive number').optional(),
   bloodType: z.string().min(1, 'Blood type is required').optional(),
+  dateOfBirth: z.string().optional(),
   specialty: z.string().min(1, 'Specialty is required').optional(),
   regionId: z.string().uuid('Invalid region ID format').optional(),
   role: z.enum(['PATIENT', 'DOCTOR', 'ADMIN']).optional(),

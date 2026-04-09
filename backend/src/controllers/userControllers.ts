@@ -6,6 +6,7 @@ import {
   resourceExists,
   databaseError,
   notFound,
+  insufficientPermissions,
 } from '../utils/errorHelpers.ts';
 import { validateRequired } from '../utils/errorHelpers.ts';
 import { updateUserSchema, type UpdateUserInput } from '../schemas/userSchemas.ts';
@@ -60,7 +61,7 @@ export const updateUserProfile = async (req: Request, res: Response): Promise<vo
   const validate = validateRequest(updateUserSchema);
   const validated = validate(req.body);
   
-  const { name, phoneNumber, profileImgUrl, role, height, weight, bloodType, specialty, regionId } = validated as UpdateUserInput & { regionId?: string };
+  const { name, phoneNumber, profileImgUrl, role, height, weight, bloodType, dateOfBirth, specialty, regionId } = validated as UpdateUserInput & { regionId?: string };
 
   try {
     // Get current user to check existing role and profile
@@ -76,9 +77,19 @@ export const updateUserProfile = async (req: Request, res: Response): Promise<vo
       notFound('User');
     }
 
+    // Check if the requester is the same user OR an ADMIN
+    if (req.user?.userId !== userId && req.user?.role !== 'ADMIN') {
+      insufficientPermissions();
+    }
+
     const currentRole = currentUser?.role;
     const newRole = role ?? currentRole;
     const isRoleChanging = newRole !== currentRole;
+
+    // Only ADMIN can change the role
+    if (isRoleChanging && req.user?.role !== 'ADMIN') {
+      insufficientPermissions();
+    }
 
     // Use transaction to ensure atomic operations
     let updatedUser;
@@ -111,6 +122,7 @@ export const updateUserProfile = async (req: Request, res: Response): Promise<vo
 
       // Step 4: Handle profile creation/update based on new role
       if (newRole === 'PATIENT') {
+        if (dateOfBirth) profileData.dateOfBirth = new Date(dateOfBirth as string)
         if (bloodType) profileData.bloodType = bloodType;
         if (height) profileData.height = height;
         if (weight) profileData.weight = weight;
@@ -184,9 +196,68 @@ export const updateUserProfile = async (req: Request, res: Response): Promise<vo
 
 export const deleteUser = async (req: Request, res: Response): Promise<void> => {
   const { userId } = req.params;
+  const role = req.user?.role
+
+  if(!userId){
+    return missingField('Parameter userId')
+  }
 
   try {
-    await prisma.user.delete({ where: { id: userId as string } });
+    const user = await prisma.user.findUnique({
+      where: {
+        id: userId as string
+      }
+    })
+
+    if(!user){
+      return notFound('User data')
+    }
+
+    const result = await prisma.$transaction(async (tx) => {
+      let deletedProfile
+      if(role === 'PATIENT'){
+        const userProfile = await tx.patientProfile.findFirst({
+          where: { userId: userId as string }
+        })
+
+        if(!userProfile){
+          deletedProfile = {}
+        }
+
+        deletedProfile = await tx.patientProfile.delete({
+          where: { id: userProfile?.id! }
+        })
+      }else if(role === 'DOCTOR'){
+        const userProfile = await tx.doctorProfile.findFirst({
+          where: { userId: userId as string }
+        })
+
+        if(!userProfile){
+          deletedProfile = {}
+        }
+
+        deletedProfile = await tx.doctorProfile.delete({
+          where: { id: userProfile?.id! }
+        })
+      }
+
+      const deletedUser = await tx.user.delete({
+        where: { id: userId as string},
+        include: {
+          patientProfile: true,
+          doctorProfile: true
+        }
+      })
+
+      return deletedUser
+    })
+
+    res.status(201).json({
+      message: "User successfully deleted",
+      result
+    })
+    
+
   } catch (error) {
     if (isAppError(error)) {
         throw error;
