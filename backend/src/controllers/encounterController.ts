@@ -1,16 +1,16 @@
 import type { Request, Response } from 'express';
 import { prisma } from '../lib/prisma.ts';
 import {
-  missingField,
-  invalidCredentials,
-  resourceExists,
-  databaseError,
-  notFound,
-  validationFailed,
-  unauthorized,
-  slotNotAvailable,
-  invalidAppointment,
-  operationNotAllowed
+    missingField,
+    invalidCredentials,
+    resourceExists,
+    databaseError,
+    notFound,
+    validationFailed,
+    unauthorized,
+    slotNotAvailable,
+    invalidAppointment,
+    operationNotAllowed
 } from '../utils/errorHelpers.ts';
 import { validateRequest } from '../utils/validateRequest.ts';
 import { createPatientBookingSchema } from '../schemas/encounterSchemas.ts';
@@ -22,7 +22,7 @@ export const getEncoPatients = async (req: Request, res: Response): Promise<void
     const userId = req.user?.userId
     const role = req.user?.role
 
-    if(role !== 'PATIENT'){
+    if (role !== 'PATIENT') {
         unauthorized("For Patient Only")
     }
 
@@ -33,7 +33,19 @@ export const getEncoPatients = async (req: Request, res: Response): Promise<void
                 userId: userId as string
             },
             include: {
-                appointments: true
+                appointments: {
+                    include: {
+                        doctor: {
+                            include: {
+                                user: {
+                                    include: {
+                                        doctorProfile: true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         })
 
@@ -43,15 +55,17 @@ export const getEncoPatients = async (req: Request, res: Response): Promise<void
             startTime: a.startTime,
             endTime: a.endTime,
             currentStatus: a.currentStatus,
-            // reason: a.reason,
-            // notes: a.notes,
-            // patientId: a.patientId,
-            // doctorId: a.doctorId,
+            reason: a.reason,
+            doctor: {
+                name: a.doctor.user.doctorProfile?.name,
+                specialty: a.doctor.user.doctorProfile?.specialty,
+
+            },
             createdAt: a.createdAt
         }))
-        
 
-        if(bookingAppointments?.length === 0){
+
+        if (bookingAppointments?.length === 0) {
             return notFound('Booking Patients')
         }
 
@@ -71,7 +85,7 @@ export const getEncoDoctors = async (req: Request, res: Response): Promise<void>
     const userId = req.user?.userId
     const role = req.user?.role
 
-    if(role !== 'DOCTOR'){
+    if (role !== 'DOCTOR') {
         unauthorized("For Doctor Only")
     }
 
@@ -98,7 +112,7 @@ export const getEncoDoctors = async (req: Request, res: Response): Promise<void>
             createdAt: a.createdAt
         }))
 
-        if(bookingAppointments?.length === 0){
+        if (bookingAppointments?.length === 0) {
             return notFound('Doctor Appointments')
         }
 
@@ -117,7 +131,7 @@ export const getEncoDoctors = async (req: Request, res: Response): Promise<void>
 export const getEncoDetails = async (req: Request, res: Response): Promise<void> => {
     const { encounterId } = req.params
 
-    if(!encounterId){
+    if (!encounterId) {
         return missingField('Parameter Encounter ID')
     }
 
@@ -131,7 +145,7 @@ export const getEncoDetails = async (req: Request, res: Response): Promise<void>
             }
         })
 
-        if(!encounter){
+        if (!encounter) {
             return notFound("Appointment Data")
         }
 
@@ -139,9 +153,9 @@ export const getEncoDetails = async (req: Request, res: Response): Promise<void>
             message: "Appointment data found!",
             details: encounter
         })
-        
+
     } catch (error) {
-        if(isAppError(error)){
+        if (isAppError(error)) {
             throw error
         }
         databaseError(error as Error)
@@ -151,7 +165,7 @@ export const getEncoDetails = async (req: Request, res: Response): Promise<void>
 export const createPatientBooking = async (req: Request, res: Response): Promise<void> => {
     const { userId, role } = req.user!
 
-    if(role !== 'PATIENT'){
+    if (role !== 'PATIENT') {
         return unauthorized('Patient Only')
     }
 
@@ -167,7 +181,7 @@ export const createPatientBooking = async (req: Request, res: Response): Promise
             }
         })
 
-        if(!patientProfile){
+        if (!patientProfile) {
             return notFound('Patient Profile')
         }
 
@@ -182,7 +196,7 @@ export const createPatientBooking = async (req: Request, res: Response): Promise
         })
 
 
-        if(existingBooking){
+        if (existingBooking) {
             return resourceExists('Someone booking this slot')
         }
 
@@ -190,7 +204,7 @@ export const createPatientBooking = async (req: Request, res: Response): Promise
         const result = await prisma.$transaction(async (tx) => {
 
             const schedule = await prisma.doctorSchedule.findFirst({
-                where: { 
+                where: {
                     doctorId: doctorProfileId,
                     dayOfWeek: new Date(date as string).getDay()
                 }
@@ -260,7 +274,7 @@ export const cancelAppointment = async (req: Request, res: Response): Promise<vo
     const role = req.user?.role
     const { encounterId } = req.params
 
-    if(!encounterId){
+    if (!encounterId) {
         return missingField("Parameter Encounter ID")
     }
 
@@ -274,17 +288,17 @@ export const cancelAppointment = async (req: Request, res: Response): Promise<vo
             }
         })
 
-        if(!encounter){
+        if (!encounter) {
             return notFound("Encounter Data")
         }
 
-        const isConfirmed = encounter.statusTimeline.some((e) => 
-            e.status === 'CONFIRMED' || 
+        const isConfirmed = encounter.statusTimeline.some((e) =>
+            e.status === 'CONFIRMED' ||
             e.status === 'COMPLETED' ||
             e.status === 'CANCELLED'
         )
 
-        if(isConfirmed){
+        if (isConfirmed) {
             return operationNotAllowed('Cannot cancelled a confirmed/completed or already cancelled appointment')
         }
 
@@ -322,7 +336,7 @@ export const cancelAppointment = async (req: Request, res: Response): Promise<vo
             result,
         })
     } catch (error) {
-        if(isAppError(error)){
+        if (isAppError(error)) {
             throw error
         }
         databaseError(error as Error)

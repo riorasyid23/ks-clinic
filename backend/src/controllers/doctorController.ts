@@ -15,19 +15,33 @@ import { calculateAvailableSlots } from '../helpers/calculateAvailableSlots.ts';
 import { isAppError } from '../utils/errors.ts';
 
 export const getDoctorByRegionId = async (req: Request, res: Response): Promise<void> => {
-    const { regionId } = req.query;
+    const { regionId, specialty, availableToday } = req.query;
+    const todayNumber = new Date().getDay();
 
     if (!regionId) {
         missingField('Parameter Region ID');
     }
 
+    let whereClause: any = [{ regionId: regionId as string }];
+    if (specialty) {
+        const specialties = (specialty as string).split(',').map((s) => s.trim());
+        whereClause.push({ specialty: { in: specialties } })
+    }
+    if (availableToday === "1") {
+        whereClause.push({ schedule: { some: { dayOfWeek: todayNumber } } })
+    }
+
+
     let doctors;
     try {
         doctors = await prisma.doctorProfile.findMany({
-            where: { regionId: regionId as string },
+            where: {
+                OR: whereClause
+            },
             include: {
                 user: true,
                 region: true,
+                schedule: true
             },
         });
     } catch (error) {
@@ -37,14 +51,26 @@ export const getDoctorByRegionId = async (req: Request, res: Response): Promise<
         databaseError(error as Error);
     }
 
+    // Sorted Doctor by available today
+    if (availableToday === "1") {
+        doctors?.sort((a, b) => {
+            const aAvailable = a.schedule.some((s) => s.dayOfWeek === todayNumber);
+            const bAvailable = b.schedule.some((s) => s.dayOfWeek === todayNumber);
+            if (aAvailable && !bAvailable) return -1;
+            if (!aAvailable && bAvailable) return 1;
+            return 0;
+        });
+    }
+
     res.status(200).json({
         message: 'Doctors retrieved successfully',
         doctors: doctors?.map((doctor) => ({
-            id: doctor.id,
+            id: doctor.userId,
             name: doctor.name,
             specialty: doctor.specialty,
             profileImgUrl: doctor.profileImgUrl,
             region: doctor.region.name,
+            city: doctor.region.city,
             userEmail: doctor.user.email,
         })),
     });
