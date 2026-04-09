@@ -1,12 +1,12 @@
 import type { Request, Response } from 'express';
 import { prisma } from '../lib/prisma.ts';
 import {
-  missingField,
-  invalidCredentials,
-  resourceExists,
-  databaseError,
-  notFound,
-  validationFailed
+    missingField,
+    invalidCredentials,
+    resourceExists,
+    databaseError,
+    notFound,
+    validationFailed
 } from '../utils/errorHelpers.ts';
 import { validateRequest } from '../utils/validateRequest.ts';
 import { createDoctorScheduleSchema } from '../schemas/userSchemas.ts';
@@ -15,39 +15,39 @@ import { calculateAvailableSlots } from '../helpers/calculateAvailableSlots.ts';
 import { isAppError } from '../utils/errors.ts';
 
 export const getDoctorByRegionId = async (req: Request, res: Response): Promise<void> => {
-  const { regionId } = req.query;
+    const { regionId } = req.query;
 
-  if (!regionId) {
-    missingField('Parameter Region ID');
-  }
-
-  let doctors;
-  try {
-    doctors = await prisma.doctorProfile.findMany({
-      where: { regionId: regionId as string },
-      include: {
-        user: true,
-        region: true,
-      },
-    });
-  } catch (error) {
-    if (isAppError(error)) {
-        throw error;
+    if (!regionId) {
+        missingField('Parameter Region ID');
     }
-    databaseError(error as Error);
-  }
 
-  res.status(200).json({
-    message: 'Doctors retrieved successfully',
-    doctors: doctors?.map((doctor) => ({
-      id: doctor.id,
-      name: doctor.name,
-      specialty: doctor.specialty,
-      profileImgUrl: doctor.profileImgUrl,
-      region: doctor.region.name,
-      userEmail: doctor.user.email,
-    })),
-  });
+    let doctors;
+    try {
+        doctors = await prisma.doctorProfile.findMany({
+            where: { regionId: regionId as string },
+            include: {
+                user: true,
+                region: true,
+            },
+        });
+    } catch (error) {
+        if (isAppError(error)) {
+            throw error;
+        }
+        databaseError(error as Error);
+    }
+
+    res.status(200).json({
+        message: 'Doctors retrieved successfully',
+        doctors: doctors?.map((doctor) => ({
+            id: doctor.id,
+            name: doctor.name,
+            specialty: doctor.specialty,
+            profileImgUrl: doctor.profileImgUrl,
+            region: doctor.region.name,
+            userEmail: doctor.user.email,
+        })),
+    });
 };
 
 export const getDoctorSchedule = async (req: Request, res: Response): Promise<void> => {
@@ -86,7 +86,7 @@ export const addDoctorSchedules = async (req: Request, res: Response): Promise<v
     const userId = req.user?.userId
     const role = req.user?.role
 
-    if(role !== 'DOCTOR') {
+    if (role !== 'DOCTOR') {
         validationFailed('Only doctors can add schedules');
     }
 
@@ -94,7 +94,7 @@ export const addDoctorSchedules = async (req: Request, res: Response): Promise<v
     const validated = validate(req.body);
 
     const { dayOfWeek, startTime, endTime, duration } = validated;
-    
+
     const parsedDayOfWeek = parseInt(dayOfWeek);
 
     if (isNaN(parsedDayOfWeek) || parsedDayOfWeek < 0 || parsedDayOfWeek > 6) {
@@ -121,7 +121,7 @@ export const addDoctorSchedules = async (req: Request, res: Response): Promise<v
             }
         })
 
-        if(isDayExists) {
+        if (isDayExists) {
             validationFailed('Schedule for the specified day already exists for this doctor');
         }
 
@@ -168,7 +168,7 @@ export const addDoctorSchedules = async (req: Request, res: Response): Promise<v
 export const getDoctorSchedules = async (req: Request, res: Response): Promise<void> => {
     const { doctorId } = req.params
 
-    if(!doctorId){
+    if (!doctorId) {
         missingField("Parameter doctorId")
     }
 
@@ -183,11 +183,11 @@ export const getDoctorSchedules = async (req: Request, res: Response): Promise<v
             }
         })
 
-        if(!doctor){
+        if (!doctor) {
             notFound("Doctor data")
         }
 
-        if(doctor?.schedule.length === 0){
+        if (doctor?.schedule.length === 0) {
             notFound("Doctor schedule")
         }
 
@@ -197,14 +197,14 @@ export const getDoctorSchedules = async (req: Request, res: Response): Promise<v
             startTime: s.startTime,
             endTime: s.endTime,
             duration: s.slotDuration
-            
+
         }))
 
         res.status(200).json({
             message: "Doctor schedules successfully retrieved!",
             schedules
         })
-        
+
     } catch (error) {
         if (isAppError(error)) {
             throw error;
@@ -232,14 +232,14 @@ export const getAvailableAppointmentSlots = async (req: Request, res: Response):
                 doctorId: doctorProfileId as string,
                 dayOfWeek: dayOfWeek
             },
-            
+
         });
 
         if (!schedule) {
             return notFound('Schedule for the specified doctor and date');
         }
 
-         // Logic to calculate available slots based on schedules and existing appointments would go here
+        // Logic to calculate available slots based on schedules and existing appointments would go here
         const existingBookings = await prisma.encounter.findMany({
             where: {
                 doctorId: doctorProfileId as string,
@@ -248,7 +248,7 @@ export const getAvailableAppointmentSlots = async (req: Request, res: Response):
                     lte: new Date(`${date}T23:59:59.999Z`)
                 },
                 currentStatus: { not: 'CANCELLED' }
-                
+
             },
         });
 
@@ -262,12 +262,59 @@ export const getAvailableAppointmentSlots = async (req: Request, res: Response):
         res.status(200).json({
             message: 'Available appointment slots retrieved successfully',
             availableSlots: slots.availableSlots,
-            unavailableSlots: slots.unavailableSlots 
+            unavailableSlots: slots.unavailableSlots
         });
     } catch (error) {
         if (isAppError(error)) {
             throw error;
         }
         databaseError(error as Error);
+    }
+}
+
+// Get Doctor's Details by params doctorId
+export const getDoctorDetails = async (req: Request, res: Response): Promise<void> => {
+    const { doctorId } = req.params;
+
+    if (!doctorId) {
+        missingField("Parameter Doctor ID")
+    }
+
+    try {
+        const doctor = await prisma.user.findUnique({
+            where: {
+                id: doctorId as string
+            },
+            include: {
+                doctorProfile: {
+                    include: {
+                        schedule: true
+                    }
+                },
+            }
+        })
+
+        if (!doctor || doctor.doctorProfile === null) {
+            return notFound("Doctor data")
+        }
+
+        const doctorDetails = {
+            id: doctor.id,
+            name: doctor.doctorProfile.name,
+            email: doctor.email,
+            phone: doctor.doctorProfile.phoneNumber,
+            specialty: doctor.doctorProfile.specialty,
+            schedule: doctor.doctorProfile.schedule
+        }
+
+        res.status(200).json({
+            message: "Doctor details retrieved successfully",
+            doctorDetails
+        })
+    } catch (error) {
+        if (isAppError(error)) {
+            throw error;
+        }
+        databaseError(error as Error)
     }
 }
