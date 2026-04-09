@@ -3,24 +3,33 @@ import '../../core/theme/app_colors.dart';
 
 class ClinicalCard extends StatelessWidget {
   final Widget child;
+  final VoidCallback? onTap;
   final EdgeInsetsGeometry? padding;
 
-  const ClinicalCard({super.key, required this.child, this.padding});
+  const ClinicalCard({
+    super.key,
+    required this.child,
+    this.padding,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: padding ?? const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(12), // xl / 0.75rem ~ 12px
-        border: Border.all(
-          color: AppColors.outlineVariant.withOpacity(0.15), // ghost border
-          width: 1,
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: padding ?? const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: AppColors.outlineVariant.withValues(alpha: 0.15),
+            width: 1,
+          ),
+          boxShadow: AppColors.ambientShadow,
         ),
-        boxShadow: AppColors.ambientShadow, // Ambient light shadow
+        child: child,
       ),
-      child: child,
     );
   }
 }

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../widgets/clinical_card.dart';
 import '../widgets/custom_text_field.dart';
+import '../widgets/bottom_nav_bar.dart';
 import '../providers/appointment_providers.dart';
 
 class SearchAppointmentsScreen extends ConsumerWidget {
@@ -26,9 +28,7 @@ class SearchAppointmentsScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-             const CustomTextField(
-              label: 'Search by specialty or doctor name',
-            ),
+            const CustomTextField(label: 'Search by specialty or doctor name'),
             const SizedBox(height: 32),
             Text('Specialties', style: textTheme.headlineMedium),
             const SizedBox(height: 16),
@@ -37,7 +37,11 @@ class SearchAppointmentsScreen extends ConsumerWidget {
               child: ListView(
                 scrollDirection: Axis.horizontal,
                 children: [
-                  _buildSpecialtyCard(context, Icons.monitor_heart, 'Cardiology'),
+                  _buildSpecialtyCard(
+                    context,
+                    Icons.monitor_heart,
+                    'Cardiology',
+                  ),
                   const SizedBox(width: 16),
                   _buildSpecialtyCard(context, Icons.psychology, 'Neurology'),
                   const SizedBox(width: 16),
@@ -56,6 +60,9 @@ class SearchAppointmentsScreen extends ConsumerWidget {
               itemBuilder: (context, index) {
                 final doc = recommendedDocs[index];
                 return ClinicalCard(
+                  onTap: () {
+                    context.push('/doctor-details');
+                  },
                   child: Row(
                     children: [
                       Container(
@@ -65,7 +72,11 @@ class SearchAppointmentsScreen extends ConsumerWidget {
                           color: AppColors.primaryFixed,
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Icon(Icons.person, color: AppColors.primary, size: 32),
+                        child: const Icon(
+                          Icons.person,
+                          color: AppColors.primary,
+                          size: 32,
+                        ),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
@@ -74,13 +85,25 @@ class SearchAppointmentsScreen extends ConsumerWidget {
                           children: [
                             Text(doc.name, style: textTheme.titleMedium),
                             const SizedBox(height: 4),
-                            Text(doc.specialty, style: textTheme.bodyMedium?.copyWith(color: AppColors.onSurfaceVariant)),
+                            Text(
+                              doc.specialty,
+                              style: textTheme.bodyMedium?.copyWith(
+                                color: AppColors.onSurfaceVariant,
+                              ),
+                            ),
                             const SizedBox(height: 4),
                             Row(
                               children: [
-                                const Icon(Icons.star, color: Colors.orange, size: 16),
+                                const Icon(
+                                  Icons.star,
+                                  color: Colors.orange,
+                                  size: 16,
+                                ),
                                 const SizedBox(width: 4),
-                                Text('${doc.rating} (${doc.reviewCount} reviews)', style: textTheme.labelMedium),
+                                Text(
+                                  '${doc.rating} (${doc.reviewCount} reviews)',
+                                  style: textTheme.labelMedium,
+                                ),
                               ],
                             ),
                           ],
@@ -94,10 +117,15 @@ class SearchAppointmentsScreen extends ConsumerWidget {
           ],
         ),
       ),
+      bottomNavigationBar: const BottomNavBar(currentIndex: 1),
     );
   }
 
-  Widget _buildSpecialtyCard(BuildContext context, IconData icon, String title) {
+  Widget _buildSpecialtyCard(
+    BuildContext context,
+    IconData icon,
+    String title,
+  ) {
     return ClinicalCard(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: Column(

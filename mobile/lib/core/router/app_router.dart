@@ -7,6 +7,7 @@ import '../../presentation/screens/profile_screen.dart';
 import '../../presentation/screens/home_screen.dart';
 import '../../presentation/screens/search_appointments_screen.dart';
 import '../../presentation/screens/my_bookings_screen.dart';
+import '../../presentation/screens/doctor_details_screen.dart';
 
 class AppRouter {
   static final router = GoRouter(
@@ -35,6 +36,10 @@ class AppRouter {
       GoRoute(
         path: '/bookings',
         builder: (context, state) => const MyBookingsScreen(),
+      ),
+      GoRoute(
+        path: '/doctor-details',
+        builder: (context, state) => const DoctorDetailsScreen(),
       ),
     ],
   );

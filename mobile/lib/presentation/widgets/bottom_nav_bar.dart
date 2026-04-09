@@ -5,10 +5,7 @@ import '../../core/theme/app_colors.dart';
 class BottomNavBar extends StatelessWidget {
   final int currentIndex;
 
-  const BottomNavBar({
-    super.key,
-    required this.currentIndex,
-  });
+  const BottomNavBar({super.key, required this.currentIndex});
 
   @override
   Widget build(BuildContext context) {
@@ -24,8 +21,21 @@ class BottomNavBar extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           _buildNavItem(context, Icons.home_filled, 'Home', 0, '/home'),
-          _buildNavItem(context, Icons.calendar_month_outlined, 'Bookings', 1, '/bookings'),
-          _buildNavItem(context, Icons.person_outline, 'Profile', 2, '/profile'),
+          _buildNavItem(context, Icons.search, 'Search', 1, '/search'),
+          _buildNavItem(
+            context,
+            Icons.calendar_month_outlined,
+            'Bookings',
+            2,
+            '/bookings',
+          ),
+          _buildNavItem(
+            context,
+            Icons.person_outline,
+            'Profile',
+            3,
+            '/profile',
+          ),
         ],
       ),
     );
@@ -43,7 +53,11 @@ class BottomNavBar extends StatelessWidget {
     return GestureDetector(
       onTap: () {
         if (!isSelected) {
-          context.go(route);
+          if (route == '/profile') {
+            context.push(route);
+          } else {
+            context.go(route);
+          }
         }
       },
       behavior: HitTestBehavior.opaque,
@@ -54,7 +68,9 @@ class BottomNavBar extends StatelessWidget {
           children: [
             Icon(
               icon,
-              color: isSelected ? AppColors.primary : AppColors.onSurfaceVariant,
+              color: isSelected
+                  ? AppColors.primary
+                  : AppColors.onSurfaceVariant,
             ),
             const SizedBox(height: 4),
             Text(
@@ -62,7 +78,9 @@ class BottomNavBar extends StatelessWidget {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                color: isSelected ? AppColors.primary : AppColors.onSurfaceVariant,
+                color: isSelected
+                    ? AppColors.primary
+                    : AppColors.onSurfaceVariant,
               ),
             ),
           ],
