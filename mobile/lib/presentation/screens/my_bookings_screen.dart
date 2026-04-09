@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../core/theme/app_colors.dart';
 import '../widgets/clinical_card.dart';
+import '../widgets/bottom_nav_bar.dart';
 import '../providers/appointment_providers.dart';
 
 class MyBookingsScreen extends ConsumerWidget {
@@ -91,6 +92,8 @@ class MyBookingsScreen extends ConsumerWidget {
           );
         },
       ),
+      bottomNavigationBar: const BottomNavBar(currentIndex: 1),
     );
   }
+
 }
