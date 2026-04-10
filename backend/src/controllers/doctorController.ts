@@ -66,6 +66,7 @@ export const getDoctorByRegionId = async (req: Request, res: Response): Promise<
         message: 'Doctors retrieved successfully',
         doctors: doctors?.map((doctor) => ({
             id: doctor.userId,
+            profileId: doctor.id,
             name: doctor.name,
             specialty: doctor.specialty,
             profileImgUrl: doctor.profileImgUrl,
@@ -326,6 +327,7 @@ export const getDoctorDetails = async (req: Request, res: Response): Promise<voi
 
         const doctorDetails = {
             id: doctor.id,
+            profileId: doctor.doctorProfile.id,
             name: doctor.doctorProfile.name,
             email: doctor.email,
             phone: doctor.doctorProfile.phoneNumber,

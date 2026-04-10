@@ -6,11 +6,14 @@ import { addDoctorSchedules, getAvailableAppointmentSlots, getDoctorByRegionId, 
 
 const router = express.Router()
 
-router.get('/', authJWT, asyncHandler(getDoctorByRegionId))
-router.get('/:doctorId', authJWT, asyncHandler(getDoctorDetails))
-router.get('/schedules/:doctorId', authJWT, asyncHandler(getDoctorSchedules))
-router.post('/schedules', authJWT, asyncHandler(addDoctorSchedules))
+router.get('/', authJWT, asyncHandler(getDoctorByRegionId));
+router.get('/slots', authJWT, asyncHandler(getAvailableAppointmentSlots));
 
-router.get('/slots', authJWT, asyncHandler(getAvailableAppointmentSlots))
+router.get('/schedules/:doctorId', authJWT, asyncHandler(getDoctorSchedules));
+
+router.get('/:doctorId', authJWT, asyncHandler(getDoctorDetails));
+
+router.post('/schedules', authJWT, asyncHandler(addDoctorSchedules));
+
 
 export default router
