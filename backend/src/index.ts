@@ -6,6 +6,7 @@ import regionRoutes from './routes/regionRoutes.ts';
 import userRoutes from './routes/userRoutes.ts';
 import doctorRoutes from './routes/doctorRoutes.ts'
 import encounterRoutes from './routes/encounterRoutes.ts'
+import insightRoutes from './routes/insightRoutes.ts'
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -20,8 +21,9 @@ app.use(correlationIdMiddleware);
 app.use('/auth', authRoutes);
 app.use('/users', userRoutes);
 app.use('/regions', regionRoutes);
-app.use('/doctors', doctorRoutes)
-app.use('/encounter', encounterRoutes)
+app.use('/doctors', doctorRoutes);
+app.use('/insights', insightRoutes);
+app.use('/encounter', encounterRoutes);
 
 // Hello World Endpoint
 app.get('/', (req: Request, res: Response) => {

@@ -16,7 +16,7 @@ import { validateRequest } from '../utils/validateRequest.ts';
 import { createPatientBookingSchema } from '../schemas/encounterSchemas.ts';
 import { addMinutes, differenceInMinutes, format, parse } from 'date-fns';
 import { AppError, isAppError } from '../utils/errors.ts';
-import type { Encounter } from '../generated/prisma/client.ts';
+import type { BookingStatus, Encounter } from '../generated/prisma/client.ts';
 
 export const getEncoPatients = async (req: Request, res: Response): Promise<void> => {
     const userId = req.user?.userId
@@ -99,7 +99,14 @@ export const getEncoDoctors = async (req: Request, res: Response): Promise<void>
                 userId: userId as string
             },
             include: {
-                appointments: true
+                appointments: {
+                    include: {
+                        patient: true
+                    },
+                    orderBy: {
+                        createdAt: 'desc'
+                    }
+                }
             }
         })
 
@@ -109,10 +116,16 @@ export const getEncoDoctors = async (req: Request, res: Response): Promise<void>
             startTime: a.startTime,
             endTime: a.endTime,
             currentStatus: a.currentStatus,
-            // reason: a.reason,
-            // notes: a.notes,
-            // patientId: a.patientId,
-            // doctorId: a.doctorId,
+            reason: a.reason,
+            patient: {
+                id: a.patient.id,
+                name: a.patient.name,
+                bloodType: a.patient.bloodType,
+                height: a.patient.height,
+                weight: a.patient.weight,
+                dateOfBirth: a.patient.dateOfBirth,
+                phoneNumber: a.patient.phoneNumber,
+            },
             createdAt: a.createdAt
         }))
 
@@ -123,6 +136,79 @@ export const getEncoDoctors = async (req: Request, res: Response): Promise<void>
         res.status(200).json({
             message: 'Appointments Data retrieved!',
             bookings: bookingAppointments
+        })
+    } catch (error) {
+        if (isAppError(error)) {
+            throw error;
+        }
+        databaseError(error as Error);
+    }
+}
+
+export const applyStatusAppointment = async (req: Request, res: Response): Promise<void> => {
+    const { encounterId, status } = req.query
+    const userId = req.user?.userId
+    const role = req.user?.role
+
+    if (role !== 'DOCTOR') {
+        unauthorized("For Doctor Only")
+    }
+
+    try {
+        const encounter = await prisma.encounter.findUnique({
+            where: {
+                id: encounterId as string
+            }
+        })
+
+        if (!encounter) {
+            return notFound('Encounter')
+        }
+
+        const statusOrder = {
+            'PENDING': 1,
+            'CONFIRMED': 2,
+            'CANCELLED': 3,
+            'COMPLETED': 4
+        }
+
+        const currentStatusOrder = statusOrder[encounter.currentStatus]
+        const newStatusOrder = statusOrder[status as BookingStatus]
+
+        if (newStatusOrder <= currentStatusOrder) {
+            return validationFailed('Invalid Status Update')
+        }
+
+        const result = await prisma.$transaction(async (tx) => {
+            const updatedEncounter = await tx.encounter.update({
+                where: {
+                    id: encounterId as string
+                },
+                data: {
+                    currentStatus: status as BookingStatus
+                },
+                include: {
+                    statusTimeline: true
+                }
+            })
+
+            const statusTimeline = await tx.statusUpdate.create({
+                data: {
+                    createdBy: `${role}-${userId}`,
+                    encounterId: encounterId as string,
+                    status: status as BookingStatus,
+                    note: req.body.note
+                }
+            })
+
+            updatedEncounter.statusTimeline.push(statusTimeline)
+
+            return updatedEncounter
+        })
+
+        res.status(200).json({
+            message: 'Appointment Status Updated!',
+            result
         })
     } catch (error) {
         if (isAppError(error)) {
@@ -180,7 +266,7 @@ export const getSingleNearestPatientAppointment = async (req: Request, res: Resp
         })
 
         if (!nearestAppointment) {
-            return notFound('Patient Appointments')
+            return notFound('Patient nearest Appointment')
         }
 
         res.status(200).json({

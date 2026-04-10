@@ -348,3 +348,89 @@ export const getDoctorDetails = async (req: Request, res: Response): Promise<voi
         databaseError(error as Error)
     }
 }
+export const getDoctorInsights = async (req: Request, res: Response): Promise<void> => {
+    const { userId } = req.user as { userId: string }
+
+    if (!userId) {
+        missingField("User ID")
+    }
+
+    try {
+        const doctorProfile = await prisma.doctorProfile.findUnique({
+            where: {
+                userId: userId as string
+            }
+        })
+
+        if (!doctorProfile) {
+            return notFound("Doctor profile")
+        }
+
+        const result = await prisma.$transaction(async (tx) => {
+            const pendingAppointmentTotal = await tx.encounter.count({
+                where: {
+                    doctorId: doctorProfile.id,
+                    currentStatus: 'PENDING'
+                }
+            })
+
+            const confirmedAppointmentTotal = await tx.encounter.count({
+                where: {
+                    doctorId: doctorProfile.id,
+                    currentStatus: 'CONFIRMED'
+                }
+            })
+
+            const completedAppointmentTotal = await tx.encounter.count({
+                where: {
+                    doctorId: doctorProfile.id,
+                    currentStatus: 'COMPLETED'
+                }
+            })
+
+            const cancelledAppointmentTotal = await tx.encounter.count({
+                where: {
+                    doctorId: doctorProfile.id,
+                    currentStatus: 'CANCELLED'
+                }
+            })
+
+            const today = new Date().toISOString().split('T')[0]
+
+            const todayAppointmentTotal = await tx.encounter.count({
+                where: {
+                    doctorId: doctorProfile.id,
+                    date: {
+                        gte: `${today}T00:00:00.000Z`,
+                        lte: `${today}T23:59:59.999Z`
+                    }
+                }
+            })
+
+            return {
+                pendingAppointmentTotal,
+                confirmedAppointmentTotal,
+                completedAppointmentTotal,
+                cancelledAppointmentTotal,
+                todayAppointmentTotal
+            }
+
+        })
+
+
+
+        res.status(200).json({
+            message: "Doctor insights retrieved successfully",
+            ...result
+        })
+
+
+
+
+    } catch (error) {
+        if (isAppError(error)) {
+            throw error;
+        }
+        databaseError(error as Error)
+    }
+}
