@@ -12,6 +12,21 @@ This repository is organized as a monorepo containing:
 
 ---
 
+## 🧪 Quick API Documentation & Testing
+
+-   **API Reference**: You can view the live API documentation [here](https://ksclinic.docs.buildwithfern.com/).
+-   **Debugging**: Backend logs are output to the terminal where `npm run dev` is executed.
+-   **Database Visualizer**: You can use Prisma Studio to explore your data:
+    ```bash
+    cd backend && npx prisma studio
+    ```
+
+## FIGMA UI/UX Journey Details
+
+You can view the UI/UX journey details in the Figma board [here](https://www.figma.com/board/Lf7aoxOM1RTG1QUNV08KGM/Clinic-Booking-Flow?node-id=0-1&p=f&t=PYf6MBQardYw2R7d-0).
+
+---
+
 ## 🛠️ Backend Setup & Configuration
 
 ### Prerequisites
@@ -139,15 +154,3 @@ If you use the provided `seed.sql`, you can log in with:
 
 ---
 
-## 🧪 Quick Documentation & Testing
-
--   **API Reference**: You can view the live API documentation [here](https://ksclinic.docs.buildwithfern.com/).
--   **Debugging**: Backend logs are output to the terminal where `npm run dev` is executed.
--   **Database Visualizer**: You can use Prisma Studio to explore your data:
-    ```bash
-    cd backend && npx prisma studio
-    ```
-
-## FIGMA UI/UX Journey Details
-
-You can view the UI/UX journey details in the Figma board [here](https://www.figma.com/board/Lf7aoxOM1RTG1QUNV08KGM/Clinic-Booking-Flow?node-id=0-1&p=f&t=PYf6MBQardYw2R7d-0).

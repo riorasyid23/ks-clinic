@@ -1,0 +1,3216 @@
+{
+  "info": {
+    "_postman_id": "90a8e2a7-a7ca-483c-bb2e-db44568edd02",
+    "name": "KS Clinic API",
+    "description": "This collection contains the core endpoints for the KS Clinic API, covering authentication, region management, user management, doctor availability, and patient appointment workflows.\n\nIt is organized into functional folders for:\n\n- Auth: user registration and login\n    \n- Region: retrieving and creating clinic regions\n    \n- Users: viewing, updating, and deleting user profiles\n    \n- Doctor: retrieving doctors by region, checking schedules, adding schedules, and viewing available slots\n    \n- Appointments: creating patient bookings, retrieving bookings, viewing appointment details, and canceling appointments\n    \n\nThe collection uses collection variables such as `{{main_url}}` and `{{accessToken}}` to simplify environment configuration and authenticated requests. Overall, it serves as a central workspace for testing and managing the main clinic booking and scheduling flows.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "20139168"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"yuji@ksclinic.com\",\n    \"password\": \"12341234\",\n    \"confirmPassword\": \"12341234\",\n    \"name\": \"Itadori Yuji\",\n    \"phoneNumber\": \"+628123123125\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{main_url}}/auth/register",
+              "host": [
+                "{{main_url}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Register Failed - Conflict",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"email\": \"riorasyid@ksclinic.com\",\n    \"password\": \"12341234\",\n    \"confirmPassword\": \"12341234\",\n    \"name\": \"Rio Al Rasyid\",\n    \"phoneNumber\": \"+628123123125\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{main_url}}/auth/register",
+                  "host": [
+                    "{{main_url}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "register"
+                  ]
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "x-correlation-id",
+                  "value": "req-1775708196465-nwdzpz4rm"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "84"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"54-tBKXM9bZVnAUQxxkp7Y3duqqd/o\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 09 Apr 2026 04:16:36 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"error\": {\n        \"code\": \"RESOURCE_EXISTS\",\n        \"message\": \"User with this email already exists\"\n    }\n}"
+            },
+            {
+              "name": "Register Failed - Missing Fields",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    // \"email\": \"riorasyid@ksclinic.com\",\n    // \"password\": \"12341234\",\n    \"confirmPassword\": \"12341234\",\n    \"name\": \"Rio Al Rasyid\",\n    \"phoneNumber\": \"+628123123125\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{main_url}}/auth/register",
+                  "host": [
+                    "{{main_url}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "register"
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "x-correlation-id",
+                  "value": "req-1775708244755-wi7pycdcu"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "89"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"59-MxwbSSAYDUgxqlaOIRJinQqUwcI\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 09 Apr 2026 04:17:24 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"error\": {\n        \"code\": \"MISSING_FIELD\",\n        \"message\": \"Missing required field(s): email, password\"\n    }\n}"
+            },
+            {
+              "name": "Register Success",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"email\": \"saitama@ksclinic.com\",\n    \"password\": \"12341234\",\n    \"confirmPassword\": \"12341234\",\n    \"name\": \"Saitama Sensei\",\n    \"phoneNumber\": \"+628123123125\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{main_url}}/auth/register",
+                  "host": [
+                    "{{main_url}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "register"
+                  ]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "x-correlation-id",
+                  "value": "req-1775708310651-l6igh81wn"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "522"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"20a-g+GejWdLjKXIBaml+HOYhJCJaRA\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 09 Apr 2026 04:18:30 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"message\": \"Registration successful\",\n    \"user\": {\n        \"id\": \"50a0d36c-c8fa-4ff8-8ccc-59d85a1b10e7\",\n        \"email\": \"saitama@ksclinic.com\",\n        \"password\": \"$2b$10$EHkKvsKZZx3LKB0jBcg4O.F33O6QKo/CLSyhg.WwMcrpi.QQwnuPe\",\n        \"role\": \"PATIENT\",\n        \"createdAt\": \"2026-04-09T04:18:30.813Z\",\n        \"patientProfile\": {\n            \"id\": \"c01be10f-1210-4e2c-a2ab-b637a8bcbe34\",\n            \"name\": \"Saitama Sensei\",\n            \"phoneNumber\": \"+628123123125\",\n            \"profileImgUrl\": null,\n            \"userId\": \"50a0d36c-c8fa-4ff8-8ccc-59d85a1b10e7\",\n            \"height\": null,\n            \"weight\": null,\n            \"bloodType\": null,\n            \"dateOfBirth\": null\n        },\n        \"doctorProfile\": null\n    }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.collectionVariables.set(\"accessToken\", jsonData.token);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    // \"email\": \"admin1@ksclinic.com\", // ADMIN\n    // \"email\": \"riorasyid@ksclinic.com\", // PATIENT\n    // \"email\": \"saitama@ksclinic.com\", // PATIENT\n    // \"email\": \"brucebanner@ksclinic.com\", // DOCTOR\n    \"email\": \"senku@ksclinic.com\", // DOCTOR/\n    // \"email\": \"drwho@ksclinic.com\", // DOCTOR\n    \"password\": \"12341234\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{main_url}}/auth/login",
+              "host": [
+                "{{main_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Login Success",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    // \"email\": \"admin1@ksclinic.com\", // ADMIN\n    \"email\": \"riorasyid@ksclinic.com\", // PATIENT\n    // \"email\": \"brucebanner@ksclinic.com\", // DOCTOR\n    // \"email\": \"senku@ksclinic.com\", // DOCTOR\n    \"password\": \"12341234\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{main_url}}/auth/login",
+                  "host": [
+                    "{{main_url}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "x-correlation-id",
+                  "value": "req-1775706665185-blxp8os1m"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "645"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"285-nDkv4gBShng1BJRLtVm3xLtAb2U\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 09 Apr 2026 03:51:05 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [
+                {
+                  "expires": "Invalid Date",
+                  "domain": "",
+                  "path": ""
+                }
+              ],
+              "body": "{\n    \"message\": \"Login successful\",\n    \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjYjYxZjIwZi0zMzk3LTQ5NzYtOWVkMi01OWVmNmE2NTExOWUiLCJlbWFpbCI6InJpb3Jhc3lpZEBrc2NsaW5pYy5jb20iLCJyb2xlIjoiUEFUSUVOVCIsImlhdCI6MTc3NTcwNjY2NSwiZXhwIjoxNzc1NzEwMjY1fQ.vd-rhv2VS5opsXrfzTznl8rxA4PES2dsU7SptM4QE9A\",\n    \"user\": {\n        \"id\": \"cb61f20f-3397-4976-9ed2-59ef6a65119e\",\n        \"email\": \"riorasyid@ksclinic.com\",\n        \"role\": \"PATIENT\",\n        \"profile\": {\n            \"id\": \"1955b807-6d71-45a7-b65e-edebf58aa057\",\n            \"name\": \"Rio Al Rasyid\",\n            \"phoneNumber\": \"+628123123125\",\n            \"profileImgUrl\": null,\n            \"userId\": \"cb61f20f-3397-4976-9ed2-59ef6a65119e\",\n            \"height\": null,\n            \"weight\": null,\n            \"bloodType\": null,\n            \"dateOfBirth\": null\n        }\n    }\n}"
+            },
+            {
+              "name": "Login Failed",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    // \"email\": \"admin1@ksclinic.com\", // ADMIN\n    \"email\": \"riorasyid@ksclinic.com\", // PATIENT\n    // \"email\": \"brucebanner@ksclinic.com\", // DOCTOR\n    // \"email\": \"senku@ksclinic.com\", // DOCTOR\n    \"password\": \"12341234x\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{main_url}}/auth/login",
+                  "host": [
+                    "{{main_url}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "x-correlation-id",
+                  "value": "req-1775708165715-gd67rv6it"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "78"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"4e-ETV1Wg79qbaDLoEDmrEiO8nOowc\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 09 Apr 2026 04:16:06 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"error\": {\n        \"code\": \"INVALID_CREDENTIALS\",\n        \"message\": \"Invalid email or password\"\n    }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Region",
+      "item": [
+        {
+          "name": "Get All Regions",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{main_url}}/regions",
+              "host": [
+                "{{main_url}}"
+              ],
+              "path": [
+                "regions"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Get All Regions Failed - Unauthorized",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{main_url}}/regions",
+                  "host": [
+                    "{{main_url}}"
+                  ],
+                  "path": [
+                    "regions"
+                  ]
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "x-correlation-id",
+                  "value": "req-1775708376249-6hufkd8dz"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "70"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"46-UlLyi8GPQBcSs0AvwBll65cee0U\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 09 Apr 2026 04:19:36 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"error\": {\n        \"code\": \"UNAUTHORIZED\",\n        \"message\": \"Invalid or expired token\"\n    }\n}"
+            },
+            {
+              "name": "Get All Regions Success",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{main_url}}/regions",
+                  "host": [
+                    "{{main_url}}"
+                  ],
+                  "path": [
+                    "regions"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "x-correlation-id",
+                  "value": "req-1775708444233-9psvee3s0"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "458"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"1ca-JufWsUXH/VlheE2ohljJxcq21bc\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 09 Apr 2026 04:20:44 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"message\": \"Regions retrieved successfully\",\n    \"data\": [\n        {\n            \"id\": \"74cad3a8-bf86-4cf7-a398-05446f2cb332\",\n            \"name\": \"Clinic Majapahit Semarang\",\n            \"city\": \"Semarang\",\n            \"address\": \"Jl Majapahit No 5\",\n            \"mapUrl\": null,\n            \"regionImgUrl\": null,\n            \"createdAt\": \"2026-04-07T09:53:50.156Z\"\n        },\n        {\n            \"id\": \"3b3ebea0-3c93-48c2-9bd2-36dd7e71b4c0\",\n            \"name\": \"Clinic Cakung Jakarta\",\n            \"city\": \"Jakarta Timur\",\n            \"address\": \"Jl Soedirman No 1\",\n            \"mapUrl\": null,\n            \"regionImgUrl\": null,\n            \"createdAt\": \"2026-04-08T07:25:31.241Z\"\n        }\n    ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create Region",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Clinic Asia Afrika Bandung\",\n    \"city\": \"Bandung\",\n    \"address\": \"Jl Asia Afrika No 4\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{main_url}}/regions/create",
+              "host": [
+                "{{main_url}}"
+              ],
+              "path": [
+                "regions",
+                "create"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Create Region Failed - Unauthorized",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"name\": \"Clinic Asia Afrika Bandung\",\n    \"city\": \"Bandung\",\n    \"address\": \"Jl Asia Afrika No 4\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{main_url}}/regions/create",
+                  "host": [
+                    "{{main_url}}"
+                  ],
+                  "path": [
+                    "regions",
+                    "create"
+                  ]
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "x-correlation-id",
+                  "value": "req-1775708540915-fb4m71059"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "209"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"d1-T0q9svuHnabXXdCeTslExeRgrHU\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 09 Apr 2026 04:22:20 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"error\": {\n        \"code\": \"INSUFFICIENT_PERMISSIONS\",\n        \"message\": \"You do not have sufficient permissions to perform this action\",\n        \"details\": {\n            \"reason\": \"User role 'PATIENT' does not have access\",\n            \"required_role\": [\n                \"ADMIN\"\n            ]\n        }\n    }\n}"
+            },
+            {
+              "name": "Create Region Success",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"name\": \"Clinic Asia Afrika Bandung\",\n    \"city\": \"Bandung\",\n    \"address\": \"Jl Asia Afrika No 4\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{main_url}}/regions/create",
+                  "host": [
+                    "{{main_url}}"
+                  ],
+                  "path": [
+                    "regions",
+                    "create"
+                  ]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "x-correlation-id",
+                  "value": "req-1775708587275-chvayghly"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "252"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"fc-kXrSLwklUnBeRjEOA7/uh6J4Zqo\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 09 Apr 2026 04:23:07 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"message\": \"Region created successfully\",\n    \"data\": {\n        \"id\": \"bff8c53b-1d91-4dc4-9512-2eceb74a6580\",\n        \"name\": \"Clinic Asia Afrika Bandung\",\n        \"city\": \"Bandung\",\n        \"address\": \"Jl Asia Afrika No 4\",\n        \"mapUrl\": null,\n        \"regionImgUrl\": null,\n        \"createdAt\": \"2026-04-09T04:23:07.284Z\"\n    }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get User Profile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{main_url}}/users/profile",
+              "host": [
+                "{{main_url}}"
+              ],
+              "path": [
+                "users",
+                "profile"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Get User Profile Success",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{main_url}}/users/profile",
+                  "host": [
+                    "{{main_url}}"
+                  ],
+                  "path": [
+                    "users",
+                    "profile"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "x-correlation-id",
+                  "value": "req-1775708640842-51rpkjian"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "394"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"18a-4ZeVpayYrWQwb0sczfjy2JrsaLg\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 09 Apr 2026 04:24:01 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"message\": \"User profile retrieved successfully\",\n    \"user\": {\n        \"id\": \"cb61f20f-3397-4976-9ed2-59ef6a65119e\",\n        \"email\": \"riorasyid@ksclinic.com\",\n        \"role\": \"PATIENT\",\n        \"profile\": {\n            \"id\": \"1955b807-6d71-45a7-b65e-edebf58aa057\",\n            \"name\": \"Rio Al Rasyid\",\n            \"phoneNumber\": \"+628123123125\",\n            \"profileImgUrl\": null,\n            \"userId\": \"cb61f20f-3397-4976-9ed2-59ef6a65119e\",\n            \"height\": null,\n            \"weight\": null,\n            \"bloodType\": null,\n            \"dateOfBirth\": null\n        }\n    }\n}"
+            },
+            {
+              "name": "Get User Profile Failed - Unauthorized",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{main_url}}/users/profile",
+                  "host": [
+                    "{{main_url}}"
+                  ],
+                  "path": [
+                    "users",
+                    "profile"
+                  ]
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "x-correlation-id",
+                  "value": "req-1775708688886-sxc0i5wv7"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "63"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"3f-xm3zUsOVwioW6OeX/blx2J5CJPk\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 09 Apr 2026 04:24:48 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"error\": {\n        \"code\": \"UNAUTHORIZED\",\n        \"message\": \"No token provided\"\n    }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Users",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"John Doe\",\n    \"phoneNumber\": \"+628123123126\",\n    \"height\": 192.6, // For 'PATIENT' only\n    \"weight\": 76.8, // For 'PATIENT' only\n    \"bloodType\": \"O\", // For 'PATIENT' only\n    \"dateOfBirth\": \"2001-07-15\" // For 'PATIENT' only\n    // \"specialty\": \"Neurology\", // For 'DOCTOR' only\n    // \"regionId\": \"74cad3a8-bf86-4cf7-a398-05446f2cb332\", // For 'DOCTOR' only\n    // available role: \"ADMIN\" | \"DOCTOR\" | \"PATIENT\"\n    // \"role\": \"DOCTOR\" // For ADMIN only\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{main_url}}/users/:userId",
+              "host": [
+                "{{main_url}}"
+              ],
+              "path": [
+                "users",
+                ":userId"
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "b19395cb-c593-47d7-a01b-7c01b36da0d5"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Update Users Failed- Update Role Unauthorized",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"name\": \"Gojo Satoru\",\n    \"phoneNumber\": \"+628123123126\",\n    \"height\": 192.6, // For 'PATIENT' only\n    \"weight\": 76.8, // For 'PATIENT' only\n    \"bloodType\": \"O\", // For 'PATIENT' only\n    \"dateOfBirth\": \"2001-07-15\", // For 'PATIENT' only\n    // \"specialty\": \"Surgery\", // For 'DOCTOR' only\n    // \"regionId\": \"3b3ebea0-3c93-48c2-9bd2-36dd7e71b4c0\", // For 'DOCTOR' only\n    // available role: \"ADMIN\" | \"DOCTOR\" | \"PATIENT\"\n    \"role\": \"DOCTOR\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{main_url}}/users/:userId",
+                  "host": [
+                    "{{main_url}}"
+                  ],
+                  "path": [
+                    "users",
+                    ":userId"
+                  ],
+                  "variable": [
+                    {
+                      "key": "userId",
+                      "value": "5137326f-1bc6-417c-bbff-e427fd4d77d8"
+                    }
+                  ]
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "x-correlation-id",
+                  "value": "req-1775710378080-6luhm8v6x"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "119"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"77-A+b82D4vaA1lNONNvkQ5Uzj1TLs\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 09 Apr 2026 04:52:58 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"error\": {\n        \"code\": \"INSUFFICIENT_PERMISSIONS\",\n        \"message\": \"You do not have sufficient permissions to perform this action\"\n    }\n}"
+            },
+            {
+              "name": "Update Users Success",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"name\": \"Gojo Satoru\",\n    \"phoneNumber\": \"+628123123126\",\n    \"height\": 192.6, // For 'PATIENT' only\n    \"weight\": 76.8, // For 'PATIENT' only\n    \"bloodType\": \"O\", // For 'PATIENT' only\n    \"dateOfBirth\": \"2001-07-15\" // For 'PATIENT' only\n    // \"specialty\": \"Surgery\", // For 'DOCTOR' only\n    // \"regionId\": \"3b3ebea0-3c93-48c2-9bd2-36dd7e71b4c0\", // For 'DOCTOR' only\n    // available role: \"ADMIN\" | \"DOCTOR\" | \"PATIENT\"\n    // \"role\": \"DOCTOR\" // For ADMIN only\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{main_url}}/users/:userId",
+                  "host": [
+                    "{{main_url}}"
+                  ],
+                  "path": [
+                    "users",
+                    ":userId"
+                  ],
+                  "variable": [
+                    {
+                      "key": "userId",
+                      "value": "50a0d36c-c8fa-4ff8-8ccc-59d85a1b10e7"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "x-correlation-id",
+                  "value": "req-1775710535520-zza04sb5q"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "410"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"19a-DMuHNyp/WBXZgknlZJidejjQr1U\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 09 Apr 2026 04:55:35 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"message\": \"User profile updated successfully\",\n    \"user\": {\n        \"id\": \"50a0d36c-c8fa-4ff8-8ccc-59d85a1b10e7\",\n        \"email\": \"saitama@ksclinic.com\",\n        \"role\": \"PATIENT\",\n        \"profile\": {\n            \"id\": \"c01be10f-1210-4e2c-a2ab-b637a8bcbe34\",\n            \"name\": \"Gojo Satoru\",\n            \"phoneNumber\": \"+628123123126\",\n            \"profileImgUrl\": null,\n            \"userId\": \"50a0d36c-c8fa-4ff8-8ccc-59d85a1b10e7\",\n            \"height\": 192.6,\n            \"weight\": 76.8,\n            \"bloodType\": \"O\",\n            \"dateOfBirth\": \"2001-07-15T00:00:00.000Z\"\n        }\n    }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete User (Work on-progress)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{main_url}}/users/delete/:userId",
+              "host": [
+                "{{main_url}}"
+              ],
+              "path": [
+                "users",
+                "delete",
+                ":userId"
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "50a0d36c-c8fa-4ff8-8ccc-59d85a1b10e7x"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Doctor",
+      "item": [
+        {
+          "name": "Get Doctor's Region",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{main_url}}/doctors?regionId=74cad3a8-bf86-4cf7-a398-05446f2cb332&specialty=Dentistry&availableToday=0",
+              "host": [
+                "{{main_url}}"
+              ],
+              "path": [
+                "doctors"
+              ],
+              "query": [
+                {
+                  "key": "regionId",
+                  "value": "74cad3a8-bf86-4cf7-a398-05446f2cb332"
+                },
+                {
+                  "key": "specialty",
+                  "value": "Dentistry"
+                },
+                {
+                  "key": "availableToday",
+                  "value": "0"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Get Doctor's Region Success - Empty",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{main_url}}/doctors?regionId=3b3ebea0-3c93-48c2-9bd2-36dd7e71b4c9",
+                  "host": [
+                    "{{main_url}}"
+                  ],
+                  "path": [
+                    "doctors"
+                  ],
+                  "query": [
+                    {
+                      "key": "regionId",
+                      "value": "3b3ebea0-3c93-48c2-9bd2-36dd7e71b4c9"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "x-correlation-id",
+                  "value": "req-1775710638451-h12ryi038"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "57"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"39-XpCwfd1momZlDgiSJ3pJlKL5Dt4\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 09 Apr 2026 04:57:18 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"message\": \"Doctors retrieved successfully\",\n    \"doctors\": []\n}"
+            },
+            {
+              "name": "Get Doctor's Region Success",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{main_url}}/doctors?regionId=3b3ebea0-3c93-48c2-9bd2-36dd7e71b4c0",
+                  "host": [
+                    "{{main_url}}"
+                  ],
+                  "path": [
+                    "doctors"
+                  ],
+                  "query": [
+                    {
+                      "key": "regionId",
+                      "value": "3b3ebea0-3c93-48c2-9bd2-36dd7e71b4c0"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "x-correlation-id",
+                  "value": "req-1775710668538-6z9xnvugi"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "236"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"ec-jEmPU+Pm5qoP9gOaUA4xBVs5HBU\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 09 Apr 2026 04:57:48 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [
+                {
+                  "expires": "Invalid Date",
+                  "domain": "",
+                  "path": ""
+                }
+              ],
+              "body": "{\n    \"message\": \"Doctors retrieved successfully\",\n    \"doctors\": [\n        {\n            \"id\": \"4e9565be-b64a-4d0e-abac-5595fd64d5c9\",\n            \"name\": \"Dr. Stone Senku\",\n            \"specialty\": \"Surgery\",\n            \"profileImgUrl\": null,\n            \"region\": \"Clinic Cakung Jakarta\",\n            \"userEmail\": \"senku@ksclinic.com\"\n        }\n    ]\n}"
+            },
+            {
+              "name": "Get Doctor's Region Failed - Missing regionId",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{main_url}}/doctors",
+                  "host": [
+                    "{{main_url}}"
+                  ],
+                  "path": [
+                    "doctors"
+                  ],
+                  "query": [
+                    {
+                      "key": "regionId",
+                      "value": "3b3ebea0-3c93-48c2-9bd2-36dd7e71b4c0",
+                      "disabled": true
+                    }
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "x-correlation-id",
+                  "value": "req-1775711701851-qo2geurg9"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "93"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"5d-EGOCqI5mkmT1gqKlt4xLjBMMf4w\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 09 Apr 2026 05:15:01 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"error\": {\n        \"code\": \"MISSING_FIELD\",\n        \"message\": \"Missing required field(s): Parameter Region ID\"\n    }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Check Doctor's Slot",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{main_url}}/doctors/slots?doctorProfileId=9b2c5dde-f074-4c97-a9aa-be8ae69bbfbd&date=2026-04-10",
+              "host": [
+                "{{main_url}}"
+              ],
+              "path": [
+                "doctors",
+                "slots"
+              ],
+              "query": [
+                {
+                  "key": "doctorProfileId",
+                  "value": "9b2c5dde-f074-4c97-a9aa-be8ae69bbfbd"
+                },
+                {
+                  "key": "date",
+                  "value": "2026-04-10"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Check Doctor's Slot Success",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{main_url}}/doctors/slots?doctorProfileId=4e9565be-b64a-4d0e-abac-5595fd64d5c9&date=2026-04-13",
+                  "host": [
+                    "{{main_url}}"
+                  ],
+                  "path": [
+                    "doctors",
+                    "slots"
+                  ],
+                  "query": [
+                    {
+                      "key": "doctorProfileId",
+                      "value": "4e9565be-b64a-4d0e-abac-5595fd64d5c9"
+                    },
+                    {
+                      "key": "date",
+                      "value": "2026-04-13"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "x-correlation-id",
+                  "value": "req-1775710695342-vhyv9styl"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "216"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"d8-hkt8o8W90NTJxl/DJW81rynuuWc\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 09 Apr 2026 04:58:15 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"message\": \"Available appointment slots retrieved successfully\",\n    \"availableSlots\": [\n        \"08:00\",\n        \"08:30\",\n        \"09:00\",\n        \"09:30\",\n        \"10:00\",\n        \"10:30\",\n        \"11:00\",\n        \"11:30\",\n        \"12:30\",\n        \"13:00\",\n        \"13:30\",\n        \"14:00\",\n        \"14:30\"\n    ],\n    \"unavailableSlots\": [\n        \"12:00\"\n    ]\n}"
+            },
+            {
+              "name": "Check Doctor's Slot Failed - Not Found",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{main_url}}/doctors/slots?doctorProfileId=4e9565be-b64a-4d0e-abac-5595fd64d5c9&date=2026-04-18",
+                  "host": [
+                    "{{main_url}}"
+                  ],
+                  "path": [
+                    "doctors",
+                    "slots"
+                  ],
+                  "query": [
+                    {
+                      "key": "doctorProfileId",
+                      "value": "4e9565be-b64a-4d0e-abac-5595fd64d5c9"
+                    },
+                    {
+                      "key": "date",
+                      "value": "2026-04-18"
+                    }
+                  ]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "x-correlation-id",
+                  "value": "req-1775710726116-u4xciesjv"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "95"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"5f-6ruYLJg1CpuBd17p3UkbfKZpbtA\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 09 Apr 2026 04:58:46 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"error\": {\n        \"code\": \"NOT_FOUND\",\n        \"message\": \"Schedule for the specified doctor and date not found\"\n    }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Add Schedules",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"dayOfWeek\": \"5\",\n    \"startTime\": \"09:00\",\n    \"endTime\": \"16:00\",\n    \"duration\": 30\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{main_url}}/doctors/schedules",
+              "host": [
+                "{{main_url}}"
+              ],
+              "path": [
+                "doctors",
+                "schedules"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Add Schedules Failed - Doctor Only",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"dayOfWeek\": \"1\",\n    \"startTime\": \"09:00\",\n    \"endTime\": \"16:00\",\n    \"duration\": 30\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{main_url}}/doctors/schedules",
+                  "host": [
+                    "{{main_url}}"
+                  ],
+                  "path": [
+                    "doctors",
+                    "schedules"
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "x-correlation-id",
+                  "value": "req-1775710827853-qaxsz78tt"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "81"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"51-M8dBmqsw0Kin9E3mogSs8yFtHt8\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 09 Apr 2026 05:00:27 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"error\": {\n        \"code\": \"VALIDATION_FAILED\",\n        \"message\": \"Only doctors can add schedules\"\n    }\n}"
+            },
+            {
+              "name": "Add Schedules Failed - Already Exist",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"dayOfWeek\": \"1\",\n    \"startTime\": \"09:00\",\n    \"endTime\": \"16:00\",\n    \"duration\": 30\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{main_url}}/doctors/schedules",
+                  "host": [
+                    "{{main_url}}"
+                  ],
+                  "path": [
+                    "doctors",
+                    "schedules"
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "x-correlation-id",
+                  "value": "req-1775710918241-v64s2urpj"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "112"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"70-Gu8YZAZwbFzTKeKPU4Vn2YmwnMk\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 09 Apr 2026 05:01:58 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"error\": {\n        \"code\": \"VALIDATION_FAILED\",\n        \"message\": \"Schedule for the specified day already exists for this doctor\"\n    }\n}"
+            },
+            {
+              "name": "Add Schedules",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"dayOfWeek\": \"3\",\n    \"startTime\": \"09:00\",\n    \"endTime\": \"16:00\",\n    \"duration\": 30\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{main_url}}/doctors/schedules",
+                  "host": [
+                    "{{main_url}}"
+                  ],
+                  "path": [
+                    "doctors",
+                    "schedules"
+                  ]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "x-correlation-id",
+                  "value": "req-1775710953174-6h12xo3d4"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "168"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"a8-mt9zjvnVLYZe//37iU2L/celBbE\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 09 Apr 2026 05:02:33 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [
+                {
+                  "expires": "Invalid Date",
+                  "domain": "",
+                  "path": ""
+                }
+              ],
+              "body": "{\n    \"message\": \"Schedule added successfully\",\n    \"schedule\": {\n        \"id\": \"68f63c72-1e10-453a-aa6c-d00248e83fee\",\n        \"dayOfWeek\": 3,\n        \"startTime\": \"09:00\",\n        \"endTime\": \"16:00\",\n        \"slotDuration\": 30\n    }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Doctor's Schedules",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{main_url}}/doctors/schedules/:doctorId",
+              "host": [
+                "{{main_url}}"
+              ],
+              "path": [
+                "doctors",
+                "schedules",
+                ":doctorId"
+              ],
+              "variable": [
+                {
+                  "key": "doctorId",
+                  "value": "b19395cb-c593-47d7-a01b-7c01b36da0d5"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Get Doctor's Schedules Failed - Not Found",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{main_url}}/doctors/schedules/:doctorId",
+                  "host": [
+                    "{{main_url}}"
+                  ],
+                  "path": [
+                    "doctors",
+                    "schedules",
+                    ":doctorId"
+                  ],
+                  "variable": [
+                    {
+                      "key": "doctorId",
+                      "value": "5137326f-1bc6-417c-bbff-e427fd4d77d9"
+                    }
+                  ]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "x-correlation-id",
+                  "value": "req-1775710986192-tq5bdb7jk"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "64"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"40-XLJj9ZKqeG88dK83XrptcOScEGQ\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 09 Apr 2026 05:03:06 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"error\": {\n        \"code\": \"NOT_FOUND\",\n        \"message\": \"Doctor data not found\"\n    }\n}"
+            },
+            {
+              "name": "Get Doctor's Schedules Success",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{main_url}}/doctors/schedules/:doctorId",
+                  "host": [
+                    "{{main_url}}"
+                  ],
+                  "path": [
+                    "doctors",
+                    "schedules",
+                    ":doctorId"
+                  ],
+                  "variable": [
+                    {
+                      "key": "doctorId",
+                      "value": "5137326f-1bc6-417c-bbff-e427fd4d77d8"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "x-correlation-id",
+                  "value": "req-1775711020351-frbn0o0ya"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "404"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"194-JrxttkCrMwbxB3deGArAYL/A4v4\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 09 Apr 2026 05:03:40 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"message\": \"Doctor schedules successfully retrieved!\",\n    \"schedules\": [\n        {\n            \"id\": \"4e33c97b-9a0f-4026-bafa-60b7e733aa54\",\n            \"dayOfWeek\": 1,\n            \"startTime\": \"08:00\",\n            \"endTime\": \"15:00\",\n            \"duration\": 30\n        },\n        {\n            \"id\": \"7019529e-07a2-4336-aaa1-88dd46e55183\",\n            \"dayOfWeek\": 2,\n            \"startTime\": \"09:00\",\n            \"endTime\": \"16:00\",\n            \"duration\": 30\n        },\n        {\n            \"id\": \"68f63c72-1e10-453a-aa6c-d00248e83fee\",\n            \"dayOfWeek\": 3,\n            \"startTime\": \"09:00\",\n            \"endTime\": \"16:00\",\n            \"duration\": 30\n        }\n    ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Doctor's Details",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{main_url}}/doctors/:doctorId",
+              "host": [
+                "{{main_url}}"
+              ],
+              "path": [
+                "doctors",
+                ":doctorId"
+              ],
+              "variable": [
+                {
+                  "key": "doctorId",
+                  "value": "5137326f-1bc6-417c-bbff-e427fd4d77d8"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Doctor Insight",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{main_url}}/insights",
+              "host": [
+                "{{main_url}}"
+              ],
+              "path": [
+                "insights"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Appointments",
+      "item": [
+        {
+          "name": "Get Patient's Booking",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{main_url}}/encounter/patient",
+              "host": [
+                "{{main_url}}"
+              ],
+              "path": [
+                "encounter",
+                "patient"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Get Patient's Booking Success",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{main_url}}/encounter/patient",
+                  "host": [
+                    "{{main_url}}"
+                  ],
+                  "path": [
+                    "encounter",
+                    "patient"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "x-correlation-id",
+                  "value": "req-1775711084568-0vrv4dmo5"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "419"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"1a3-ac6qdnu4vbxLw2qka4+ZqO0ZLEY\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 09 Apr 2026 05:04:44 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [
+                {
+                  "expires": "Invalid Date",
+                  "domain": "",
+                  "path": ""
+                }
+              ],
+              "body": "{\n    \"message\": \"Bookings Data retrieved!\",\n    \"bookings\": [\n        {\n            \"id\": \"ed8dedda-12ae-4d20-b633-afc6a540206d\",\n            \"date\": \"2026-04-13T00:00:00.000Z\",\n            \"startTime\": \"12:00\",\n            \"endTime\": \"12:30\",\n            \"currentStatus\": \"PENDING\",\n            \"createdAt\": \"2026-04-08T16:23:45.974Z\"\n        },\n        {\n            \"id\": \"ef1f7464-ce0f-47c9-a172-2cf943347f48\",\n            \"date\": \"2026-04-13T00:00:00.000Z\",\n            \"startTime\": \"08:00\",\n            \"endTime\": \"08:30\",\n            \"currentStatus\": \"CANCELLED\",\n            \"createdAt\": \"2026-04-08T15:01:59.521Z\"\n        }\n    ]\n}"
+            },
+            {
+              "name": "Get Patient's Booking Failed - Not found",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{main_url}}/encounter/patient",
+                  "host": [
+                    "{{main_url}}"
+                  ],
+                  "path": [
+                    "encounter",
+                    "patient"
+                  ]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "x-correlation-id",
+                  "value": "req-1775711133515-sm2znk3qz"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "69"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"45-mTrxLTj6oYF/sUpNUDEVZM6+o94\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 09 Apr 2026 05:05:33 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"error\": {\n        \"code\": \"NOT_FOUND\",\n        \"message\": \"Booking Patients not found\"\n    }\n}"
+            },
+            {
+              "name": "Get Patient's Booking Failed - Unauthorized role",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{main_url}}/encounter/patient",
+                  "host": [
+                    "{{main_url}}"
+                  ],
+                  "path": [
+                    "encounter",
+                    "patient"
+                  ]
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "x-correlation-id",
+                  "value": "req-1775711221808-hoyoth4vx"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "62"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"3e-mrom/ozO6GJn4v0+5AamfKqKZO0\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 09 Apr 2026 05:07:01 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"error\": {\n        \"code\": \"UNAUTHORIZED\",\n        \"message\": \"For Patient Only\"\n    }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Doctor's Appointments",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{main_url}}/encounter/doctor",
+              "host": [
+                "{{main_url}}"
+              ],
+              "path": [
+                "encounter",
+                "doctor"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Get Doctor's Appointments Failed - Unauthorized role",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{main_url}}/encounter/doctor",
+                  "host": [
+                    "{{main_url}}"
+                  ],
+                  "path": [
+                    "encounter",
+                    "doctor"
+                  ]
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "x-correlation-id",
+                  "value": "req-1775711177156-dpjo3lvqd"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "61"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"3d-r7leq3d1loMs2Itf3XURa6oeoXI\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 09 Apr 2026 05:06:17 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"error\": {\n        \"code\": \"UNAUTHORIZED\",\n        \"message\": \"For Doctor Only\"\n    }\n}"
+            },
+            {
+              "name": "Get Doctor's Appointments Success",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{main_url}}/encounter/doctor",
+                  "host": [
+                    "{{main_url}}"
+                  ],
+                  "path": [
+                    "encounter",
+                    "doctor"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "x-correlation-id",
+                  "value": "req-1775711255287-hjqs0smlf"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "423"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"1a7-hkR0xad8VWYClJxDMIfiMZ3/YhA\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 09 Apr 2026 05:07:35 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"message\": \"Appointments Data retrieved!\",\n    \"bookings\": [\n        {\n            \"id\": \"ed8dedda-12ae-4d20-b633-afc6a540206d\",\n            \"date\": \"2026-04-13T00:00:00.000Z\",\n            \"startTime\": \"12:00\",\n            \"endTime\": \"12:30\",\n            \"currentStatus\": \"PENDING\",\n            \"createdAt\": \"2026-04-08T16:23:45.974Z\"\n        },\n        {\n            \"id\": \"ef1f7464-ce0f-47c9-a172-2cf943347f48\",\n            \"date\": \"2026-04-13T00:00:00.000Z\",\n            \"startTime\": \"08:00\",\n            \"endTime\": \"08:30\",\n            \"currentStatus\": \"CANCELLED\",\n            \"createdAt\": \"2026-04-08T15:01:59.521Z\"\n        }\n    ]\n}"
+            },
+            {
+              "name": "Get Doctor's Appointments Failed - Not found",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{main_url}}/encounter/doctor",
+                  "host": [
+                    "{{main_url}}"
+                  ],
+                  "path": [
+                    "encounter",
+                    "doctor"
+                  ]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "x-correlation-id",
+                  "value": "req-1775711290345-zj2154ixd"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "72"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"48-j1Zw360OQNeQZKsw963E1fFbe+I\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 09 Apr 2026 05:08:10 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"error\": {\n        \"code\": \"NOT_FOUND\",\n        \"message\": \"Doctor Appointments not found\"\n    }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create Patient Booking",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"date\": \"2026-04-13\",\n    \"startTime\": \"13:00\",\n    \"reason\": \"Medical Checkup/Control\",\n    \"notes\": \"Cortisol Level checks\",\n    \"doctorProfileId\": \"4e9565be-b64a-4d0e-abac-5595fd64d5c9\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{main_url}}/encounter/patient/create",
+              "host": [
+                "{{main_url}}"
+              ],
+              "path": [
+                "encounter",
+                "patient",
+                "create"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Create Patient Booking Success",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"date\": \"2026-04-13\",\n    \"startTime\": \"13:00\",\n    \"reason\": \"Medical Checkup/Control\",\n    \"notes\": \"Cortisol Level checks\",\n    \"doctorProfileId\": \"4e9565be-b64a-4d0e-abac-5595fd64d5c9\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{main_url}}/encounter/patient/create",
+                  "host": [
+                    "{{main_url}}"
+                  ],
+                  "path": [
+                    "encounter",
+                    "patient",
+                    "create"
+                  ]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "x-correlation-id",
+                  "value": "req-1775711551512-wram2c615"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "673"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"2a1-Gd9YuM/AUpAH7y1E3Sa0JohV4/E\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 09 Apr 2026 05:12:31 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [
+                {
+                  "expires": "Invalid Date",
+                  "domain": "",
+                  "path": ""
+                }
+              ],
+              "body": "{\n    \"message\": \"Booking is created!\",\n    \"booking\": {\n        \"id\": \"410954f0-6b3a-4299-adac-0250c32d0ce0\",\n        \"date\": \"2026-04-13T00:00:00.000Z\",\n        \"startTime\": \"13:00\",\n        \"endTime\": \"13:30\",\n        \"reason\": \"Medical Checkup/Control\",\n        \"notes\": \"Cortisol Level checks\",\n        \"currentStatus\": \"PENDING\",\n        \"createdAt\": \"2026-04-09T05:12:31.551Z\",\n        \"patientId\": \"c01be10f-1210-4e2c-a2ab-b637a8bcbe34\",\n        \"doctorId\": \"4e9565be-b64a-4d0e-abac-5595fd64d5c9\",\n        \"statusTimeline\": [\n            {\n                \"id\": \"deb06b52-1900-47f6-bc4f-eb8ce2f43d6f\",\n                \"status\": \"PENDING\",\n                \"note\": \"Initial booking created by patient\",\n                \"createdBy\": \"PATIENT-50a0d36c-c8fa-4ff8-8ccc-59d85a1b10e7\",\n                \"createdAt\": \"2026-04-09T05:12:31.551Z\",\n                \"encounterId\": \"410954f0-6b3a-4299-adac-0250c32d0ce0\"\n            }\n        ]\n    }\n}"
+            },
+            {
+              "name": "Create Patient Booking Failed - Missing Field",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    // \"date\": \"2026-04-13\",\n    // \"startTime\": \"12:00\",\n    \"reason\": \"Medical Checkup/Control\",\n    \"notes\": \"Cortisol Level checks\",\n    \"doctorProfileId\": \"4e9565be-b64a-4d0e-abac-5595fd64d5c9\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{main_url}}/encounter/patient/create",
+                  "host": [
+                    "{{main_url}}"
+                  ],
+                  "path": [
+                    "encounter",
+                    "patient",
+                    "create"
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "x-correlation-id",
+                  "value": "req-1775711403545-n3rwbk5yc"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "327"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"147-nAT43vXCirJngsKE8CqlDzQLEuU\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 09 Apr 2026 05:10:03 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"error\": {\n        \"code\": \"VALIDATION_FAILED\",\n        \"message\": \"date: Invalid input: expected string, received undefined; startTime: Invalid input: expected string, received undefined\",\n        \"details\": {\n            \"fieldErrors\": {\n                \"date\": [\n                    \"Invalid input: expected string, received undefined\"\n                ],\n                \"startTime\": [\n                    \"Invalid input: expected string, received undefined\"\n                ]\n            }\n        }\n    }\n}"
+            },
+            {
+              "name": "Create Patient Booking Failed - Conflict Booking",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"date\": \"2026-04-13\",\n    \"startTime\": \"12:00\",\n    \"reason\": \"Medical Checkup/Control\",\n    \"notes\": \"Cortisol Level checks\",\n    \"doctorProfileId\": \"4e9565be-b64a-4d0e-abac-5595fd64d5c9\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{main_url}}/encounter/patient/create",
+                  "host": [
+                    "{{main_url}}"
+                  ],
+                  "path": [
+                    "encounter",
+                    "patient",
+                    "create"
+                  ]
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "x-correlation-id",
+                  "value": "req-1775711446101-xege5dppi"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "89"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"59-a7WQ0eQDvC334CtgfPT6biUf+CM\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 09 Apr 2026 05:10:46 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"error\": {\n        \"code\": \"RESOURCE_EXISTS\",\n        \"message\": \"Someone booking this slot already exists\"\n    }\n}"
+            },
+            {
+              "name": "Create Patient Booking Failed - Doctor Unavailable",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"date\": \"2026-04-13\",\n    \"startTime\": \"13:00\",\n    \"reason\": \"Medical Checkup/Control\",\n    \"notes\": \"Cortisol Level checks\",\n    \"doctorProfileId\": \"4e9565be-b64a-4d0e-abac-5595fd64d5c0\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{main_url}}/encounter/patient/create",
+                  "host": [
+                    "{{main_url}}"
+                  ],
+                  "path": [
+                    "encounter",
+                    "patient",
+                    "create"
+                  ]
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "x-correlation-id",
+                  "value": "req-1775711504042-strrudklg"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "84"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"54-d56hEt8f2JFUqlr+u/QW1skJe/M\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 09 Apr 2026 05:11:44 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"error\": {\n        \"code\": \"SLOT_NOT_AVAILABLE\",\n        \"message\": \"Doctor does not work on this day\"\n    }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Appointment Details",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{main_url}}/encounter/:encounterId",
+              "host": [
+                "{{main_url}}"
+              ],
+              "path": [
+                "encounter",
+                ":encounterId"
+              ],
+              "variable": [
+                {
+                  "key": "encounterId",
+                  "value": "410954f0-6b3a-4299-adac-0250c32d0ce0"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Get Appointment Details Failed - Not found",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{main_url}}/encounter/:encounterId",
+                  "host": [
+                    "{{main_url}}"
+                  ],
+                  "path": [
+                    "encounter",
+                    ":encounterId"
+                  ],
+                  "variable": [
+                    {
+                      "key": "encounterId",
+                      "value": "ef1f7464-ce0f-47c9-a172-2cf943347f48"
+                    }
+                  ]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "x-correlation-id",
+                  "value": "req-1775711755555-m6wub92gk"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "69"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"45-APtVW9pTxkjNhc2Rydzh4ggTdWg\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 09 Apr 2026 05:15:55 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"error\": {\n        \"code\": \"NOT_FOUND\",\n        \"message\": \"Appointment Data not found\"\n    }\n}"
+            },
+            {
+              "name": "Get Appointment Details Success",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{main_url}}/encounter/:encounterId",
+                  "host": [
+                    "{{main_url}}"
+                  ],
+                  "path": [
+                    "encounter",
+                    ":encounterId"
+                  ],
+                  "variable": [
+                    {
+                      "key": "encounterId",
+                      "value": "ef1f7464-ce0f-47c9-a172-2cf943347f48"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "x-correlation-id",
+                  "value": "req-1775711787084-rum47t56x"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "923"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"39b-XPgSBkgb6gsqQ9PARcaSWC0lOvY\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 09 Apr 2026 05:16:27 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"message\": \"Appointment data found!\",\n    \"details\": {\n        \"id\": \"ef1f7464-ce0f-47c9-a172-2cf943347f48\",\n        \"date\": \"2026-04-13T00:00:00.000Z\",\n        \"startTime\": \"08:00\",\n        \"endTime\": \"08:30\",\n        \"reason\": \"Medical Checkup/Control\",\n        \"notes\": \"Cortisol Level checks\",\n        \"currentStatus\": \"CANCELLED\",\n        \"createdAt\": \"2026-04-08T15:01:59.521Z\",\n        \"patientId\": \"1955b807-6d71-45a7-b65e-edebf58aa057\",\n        \"doctorId\": \"4e9565be-b64a-4d0e-abac-5595fd64d5c9\",\n        \"statusTimeline\": [\n            {\n                \"id\": \"6e0d33d3-1810-4b32-959b-535ccea2e142\",\n                \"status\": \"PENDING\",\n                \"note\": \"Initial booking created by patient\",\n                \"createdBy\": \"cb61f20f-3397-4976-9ed2-59ef6a65119e\",\n                \"createdAt\": \"2026-04-08T15:01:59.521Z\",\n                \"encounterId\": \"ef1f7464-ce0f-47c9-a172-2cf943347f48\"\n            },\n            {\n                \"id\": \"4b6deed8-03d1-4bd6-af04-f929d5e41287\",\n                \"status\": \"CANCELLED\",\n                \"note\": \"Doctor is on sickday off\",\n                \"createdBy\": \"PATIENT-cb61f20f-3397-4976-9ed2-59ef6a65119e\",\n                \"createdAt\": \"2026-04-09T04:03:01.830Z\",\n                \"encounterId\": \"ef1f7464-ce0f-47c9-a172-2cf943347f48\"\n            }\n        ]\n    }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Cancel Appointment",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"note\": \"Doctor is on holiday\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{main_url}}/encounter/:encounterId",
+              "host": [
+                "{{main_url}}"
+              ],
+              "path": [
+                "encounter",
+                ":encounterId"
+              ],
+              "variable": [
+                {
+                  "key": "encounterId",
+                  "value": "410954f0-6b3a-4299-adac-0250c32d0ce0"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Cancel Appointment Failed - Status Invalid",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"note\": \"Doctor is on sickday off\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{main_url}}/encounter/:encounterId",
+                  "host": [
+                    "{{main_url}}"
+                  ],
+                  "path": [
+                    "encounter",
+                    ":encounterId"
+                  ],
+                  "variable": [
+                    {
+                      "key": "encounterId",
+                      "value": "ef1f7464-ce0f-47c9-a172-2cf943347f48"
+                    }
+                  ]
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "x-correlation-id",
+                  "value": "req-1775711842024-741enlbvh"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "126"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"7e-1kPQTWn4jtipiSNdyNQ7CdH7k3s\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 09 Apr 2026 05:17:22 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"error\": {\n        \"code\": \"OPERATION_NOT_ALLOWED\",\n        \"message\": \"Cannot cancelled a confirmed/completed or already cancelled appointment\"\n    }\n}"
+            },
+            {
+              "name": "Cancel Appointment Success",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"note\": \"Doctor is on holiday\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{main_url}}/encounter/:encounterId",
+                  "host": [
+                    "{{main_url}}"
+                  ],
+                  "path": [
+                    "encounter",
+                    ":encounterId"
+                  ],
+                  "variable": [
+                    {
+                      "key": "encounterId",
+                      "value": "410954f0-6b3a-4299-adac-0250c32d0ce0"
+                    }
+                  ]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "x-correlation-id",
+                  "value": "req-1775711920028-2um1qgegw"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "928"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"3a0-UnIQTMIhk6W47WfHydgLHCa8bx4\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 09 Apr 2026 05:18:40 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"message\": \"Appointment is Cancelled!\",\n    \"result\": {\n        \"id\": \"410954f0-6b3a-4299-adac-0250c32d0ce0\",\n        \"date\": \"2026-04-13T00:00:00.000Z\",\n        \"startTime\": \"13:00\",\n        \"endTime\": \"13:30\",\n        \"reason\": \"Medical Checkup/Control\",\n        \"notes\": \"Cortisol Level checks\",\n        \"currentStatus\": \"CANCELLED\",\n        \"createdAt\": \"2026-04-09T05:12:31.551Z\",\n        \"patientId\": \"c01be10f-1210-4e2c-a2ab-b637a8bcbe34\",\n        \"doctorId\": \"4e9565be-b64a-4d0e-abac-5595fd64d5c9\",\n        \"statusTimeline\": [\n            {\n                \"id\": \"deb06b52-1900-47f6-bc4f-eb8ce2f43d6f\",\n                \"status\": \"PENDING\",\n                \"note\": \"Initial booking created by patient\",\n                \"createdBy\": \"PATIENT-50a0d36c-c8fa-4ff8-8ccc-59d85a1b10e7\",\n                \"createdAt\": \"2026-04-09T05:12:31.551Z\",\n                \"encounterId\": \"410954f0-6b3a-4299-adac-0250c32d0ce0\"\n            },\n            {\n                \"id\": \"095669d2-703b-46fc-a3f7-bedb0af18eba\",\n                \"status\": \"CANCELLED\",\n                \"note\": \"Doctor is on holiday\",\n                \"createdBy\": \"PATIENT-50a0d36c-c8fa-4ff8-8ccc-59d85a1b10e7\",\n                \"createdAt\": \"2026-04-09T05:18:40.052Z\",\n                \"encounterId\": \"410954f0-6b3a-4299-adac-0250c32d0ce0\"\n            }\n        ]\n    }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Nearest Patient Booking",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{main_url}}/encounter/patient/nearest",
+              "host": [
+                "{{main_url}}"
+              ],
+              "path": [
+                "encounter",
+                "patient",
+                "nearest"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Apply Status Appointments",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"note\": \"Confirmed, please visit the clinic\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{main_url}}/encounter/status-apply?encounterId=8da4f0ba-e05a-48f8-9e22-3466af127649&status=CONFIRMED",
+              "host": [
+                "{{main_url}}"
+              ],
+              "path": [
+                "encounter",
+                "status-apply"
+              ],
+              "query": [
+                {
+                  "key": "encounterId",
+                  "value": "8da4f0ba-e05a-48f8-9e22-3466af127649"
+                },
+                {
+                  "key": "status",
+                  "value": "CONFIRMED"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "main_url",
+      "value": ""
+    },
+    {
+      "key": "accessToken",
+      "value": ""
+    }
+  ]
+}
