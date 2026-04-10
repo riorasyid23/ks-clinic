@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/user_model.dart';
 import '../../data/repositories/auth_repository.dart';
@@ -9,7 +10,12 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 
 /// Holds the current authentication state managed by [AuthNotifier].
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
-  return AuthNotifier(ref.read(authRepositoryProvider));
+  final notifier = AuthNotifier(ref.read(authRepositoryProvider));
+
+  // Optional: check session on startup or resume
+  // notifier.checkSession();
+
+  return notifier;
 });
 
 /// Represents the possible states of authentication.
@@ -36,11 +42,28 @@ class AuthError extends AuthState {
   const AuthError(this.message);
 }
 
+class AuthSessionExpired extends AuthState {
+  const AuthSessionExpired();
+}
+
 /// Manages login / logout and exposes [AuthState].
 class AuthNotifier extends StateNotifier<AuthState> {
   final AuthRepository _repository;
+  Timer? _expiryTimer;
 
-  AuthNotifier(this._repository) : super(const AuthInitial());
+  AuthNotifier(this._repository) : super(const AuthInitial()) {
+    // Check session every minute to catch expiry while app is running
+    _expiryTimer = Timer.periodic(
+      const Duration(seconds: 20),
+      (_) => checkSession(),
+    );
+  }
+
+  @override
+  void dispose() {
+    _expiryTimer?.cancel();
+    super.dispose();
+  }
 
   /// Attempt to login with the given credentials.
   Future<void> login(String email, String password) async {
@@ -61,8 +84,27 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = const AuthInitial();
   }
 
-  /// Check if an existing session is available (for splash screen).
-  Future<bool> tryAutoLogin() async {
-    return await _repository.isLoggedIn();
+  /// Check if an existing session is available and not expired.
+  Future<bool> checkSession() async {
+    final token = await _repository.getToken();
+    if (token == null || token.isEmpty) return false;
+
+    final expiry = await _repository.getExpiryAt();
+    if (expiry != null && DateTime.now().isAfter(expiry)) {
+      // Only set to expired if we were previously logged in or investigating session
+      if (state is! AuthInitial && state is! AuthSessionExpired) {
+        state = const AuthSessionExpired();
+      }
+      return false;
+    }
+
+    // If we are technically logged in but state is initial, update state
+    // (This helps with auto-login from splash)
+    if (state is AuthInitial) {
+      // We might need to fetch user profile here if wanted,
+      // but for simple expiry check, returns true is enough.
+    }
+
+    return true;
   }
 }

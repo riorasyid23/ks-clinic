@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:medisify/presentation/providers/auth_providers.dart';
 import 'package:medisify/presentation/widgets/app_bar_main.dart';
 import '../../core/theme/app_colors.dart';
@@ -32,6 +33,13 @@ class HomeScreen extends ConsumerWidget {
               const SizedBox(height: 32),
               _buildNextAppointment(textTheme),
               const SizedBox(height: 48), // Padding for bottom nav
+              InkWell(
+                onTap: () {
+                  // Navigator.pushNamed(context, '/');
+                  context.go('/');
+                },
+                child: const Text('Test Splash Screen'),
+              ),
             ],
           ),
         ),

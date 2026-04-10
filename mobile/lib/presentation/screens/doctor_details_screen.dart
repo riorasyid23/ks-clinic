@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../data/models/doctor_detail_model.dart';
 import '../providers/search_providers.dart';
+import '../widgets/slot_selection_bottom_sheet.dart';
 
 class DoctorDetailsScreen extends ConsumerWidget {
   final String doctorId;
@@ -84,7 +85,8 @@ class DoctorDetailsScreen extends ConsumerWidget {
               Text('Error: ${error.toString()}'),
               const SizedBox(height: 16),
               ElevatedButton(
-                onPressed: () => ref.invalidate(doctorDetailsProvider(doctorId)),
+                onPressed: () =>
+                    ref.invalidate(doctorDetailsProvider(doctorId)),
                 child: const Text('Retry'),
               ),
             ],
@@ -92,7 +94,10 @@ class DoctorDetailsScreen extends ConsumerWidget {
         ),
         data: (doctor) => SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 24.0,
+              vertical: 24.0,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -119,7 +124,15 @@ class DoctorDetailsScreen extends ConsumerWidget {
           ),
           child: ElevatedButton(
             onPressed: () {
-              // TODO: Navigation to booking page
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (context) => SlotSelectionBottomSheet(
+                  doctorProfileId: doctor.profileId,
+                  doctorName: doctor.name,
+                ),
+              );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
@@ -133,11 +146,7 @@ class DoctorDetailsScreen extends ConsumerWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(
-                  Icons.calendar_today,
-                  size: 20,
-                  color: Colors.white,
-                ),
+                const Icon(Icons.calendar_today, size: 20, color: Colors.white),
                 const SizedBox(width: 8),
                 Text(
                   'Book Appointment',

@@ -43,6 +43,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
+    final authState = ref.watch(authProvider);
+    final isLoading = authState is AuthLoading;
+    final isExpired = authState is AuthSessionExpired;
+
     // Listen to auth state changes
     ref.listen<AuthState>(authProvider, (previous, next) {
       if (next is AuthAuthenticated) {
@@ -56,9 +60,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         );
       }
     });
-
-    final authState = ref.watch(authProvider);
-    final isLoading = authState is AuthLoading;
 
     return Scaffold(
       backgroundColor: AppColors.surface,
@@ -75,6 +76,31 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  if (isExpired)
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 24),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.errorContainer,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.error.withValues(alpha: 0.2)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.timer_off_outlined, color: AppColors.error),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'Session Ended, Please login again',
+                              style: textTheme.bodyMedium?.copyWith(
+                                color: AppColors.onErrorContainer,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   // Logo header
                   Row(
                     children: [

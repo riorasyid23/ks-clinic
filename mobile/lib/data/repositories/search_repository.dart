@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/widgets.dart';
 import '../models/region_model.dart';
 import '../models/doctor_result_model.dart';
 import '../models/doctor_detail_model.dart';
@@ -45,10 +46,7 @@ class SearchRepository {
         queryParams['availableToday'] = '1';
       }
 
-      final response = await _dio.get(
-        '/doctors',
-        queryParameters: queryParams,
-      );
+      final response = await _dio.get('/doctors', queryParameters: queryParams);
       final data = response.data as Map<String, dynamic>;
       final doctorsJson = data['doctors'] as List<dynamic>;
 
@@ -69,7 +67,28 @@ class SearchRepository {
 
       return DoctorDetail.fromJson(doctorDetailsJson);
     } on DioException {
+      debugPrint('Failed to load doctor details');
       throw Exception('Failed to load doctor details');
+    }
+  }
+
+  /// Fetches available and unavailable slots for a doctor on a specific date.
+  Future<SlotResult> getDoctorSlots({
+    required String doctorProfileId,
+    required String date,
+  }) async {
+    try {
+      final response = await _dio.get(
+        '/doctors/slots',
+        queryParameters: {'doctorProfileId': doctorProfileId, 'date': date},
+      );
+      return SlotResult.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        // Return empty slots if no schedule is found for that day
+        return const SlotResult(availableSlots: [], unavailableSlots: []);
+      }
+      throw Exception('Failed to load available slots');
     }
   }
 }

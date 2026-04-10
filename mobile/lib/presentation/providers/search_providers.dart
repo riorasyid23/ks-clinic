@@ -91,3 +91,35 @@ final doctorDetailsProvider =
   final repo = ref.read(searchRepositoryProvider);
   return repo.getDoctorDetails(doctorId);
 });
+
+/// Parameters for fetching doctor slots.
+class DoctorSlotParams {
+  final String doctorProfileId;
+  final String date;
+
+  const DoctorSlotParams({
+    required this.doctorProfileId,
+    required this.date,
+  });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is DoctorSlotParams &&
+          runtimeType == other.runtimeType &&
+          doctorProfileId == other.doctorProfileId &&
+          date == other.date;
+
+  @override
+  int get hashCode => doctorProfileId.hashCode ^ date.hashCode;
+}
+
+/// Fetches available slots for a doctor on a specific date.
+final doctorSlotsProvider =
+    FutureProvider.family<SlotResult, DoctorSlotParams>((ref, params) async {
+  final repo = ref.read(searchRepositoryProvider);
+  return repo.getDoctorSlots(
+    doctorProfileId: params.doctorProfileId,
+    date: params.date,
+  );
+});

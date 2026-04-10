@@ -12,16 +12,14 @@ class AuthRepository {
   static const _userEmailKey = 'user_email';
   static const _userRoleKey = 'user_role';
   static const _userNameKey = 'user_name';
+  static const _expiryKey = 'auth_expiry';
 
   /// Sends login credentials and returns a [LoginResponse] on success.
   Future<LoginResponse> login(String email, String password) async {
     try {
       final response = await _dio.post(
         '/auth/login',
-        data: {
-          'email': email,
-          'password': password,
-        },
+        data: {'email': email, 'password': password},
       );
 
       final loginResponse = LoginResponse.fromJson(
@@ -51,6 +49,10 @@ class AuthRepository {
     if (response.user.profile != null) {
       await prefs.setString(_userNameKey, response.user.profile!.name);
     }
+
+    // Set expiry to 1 hour from now
+    final expiry = DateTime.now().add(const Duration(hours: 1));
+    await prefs.setString(_expiryKey, expiry.toIso8601String());
   }
 
   /// Read the saved token (returns null if not logged in).
@@ -65,10 +67,24 @@ class AuthRepository {
     return prefs.getString(_userNameKey);
   }
 
+  /// Read session expiry time.
+  Future<DateTime?> getExpiryAt() async {
+    final prefs = await SharedPreferences.getInstance();
+    final expiryStr = prefs.getString(_expiryKey);
+    if (expiryStr == null) return null;
+    return DateTime.tryParse(expiryStr);
+  }
+
   /// Check whether a valid session exists.
   Future<bool> isLoggedIn() async {
     final token = await getToken();
-    return token != null && token.isNotEmpty;
+    if (token == null || token.isEmpty) return false;
+
+    // Also check expiry
+    final expiry = await getExpiryAt();
+    if (expiry == null) return false;
+
+    return DateTime.now().isBefore(expiry);
   }
 
   /// Clear all session data (logout).
@@ -79,6 +95,7 @@ class AuthRepository {
     await prefs.remove(_userEmailKey);
     await prefs.remove(_userRoleKey);
     await prefs.remove(_userNameKey);
+    await prefs.remove(_expiryKey);
   }
 }
 

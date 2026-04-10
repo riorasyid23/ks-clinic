@@ -25,14 +25,15 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     if (!mounted) return;
 
     // Check if user has an existing session
-    final isLoggedIn =
-        await ref.read(authProvider.notifier).tryAutoLogin();
+    final isLoggedIn = await ref.read(authProvider.notifier).checkSession();
 
     if (!mounted) return;
 
     if (isLoggedIn) {
       context.go('/home');
     } else {
+      // If session expired, the AuthNotifier state updated to AuthSessionExpired
+      // We can handle the alert in the Login screen or here
       context.go('/login');
     }
   }
