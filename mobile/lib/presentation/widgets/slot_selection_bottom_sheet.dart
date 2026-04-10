@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../core/theme/app_colors.dart';
 import '../providers/search_providers.dart';
@@ -21,6 +22,19 @@ class SlotSelectionBottomSheet extends ConsumerStatefulWidget {
 class _SlotSelectionBottomSheetState extends ConsumerState<SlotSelectionBottomSheet> {
   DateTime _selectedDate = DateTime.now();
   String? _selectedSlot;
+
+  @override
+  void initState() {
+    super.initState();
+    // Force a fresh fetch each time the bottom sheet is opened
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
+      ref.invalidate(doctorSlotsProvider(DoctorSlotParams(
+        doctorProfileId: widget.doctorProfileId,
+        date: dateStr,
+      )));
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -106,6 +120,12 @@ class _SlotSelectionBottomSheetState extends ConsumerState<SlotSelectionBottomSh
                   _selectedDate = picked;
                   _selectedSlot = null; // Reset slot when date changes
                 });
+                // Force fresh fetch for the newly selected date
+                final dateStr = DateFormat('yyyy-MM-dd').format(picked);
+                ref.invalidate(doctorSlotsProvider(DoctorSlotParams(
+                  doctorProfileId: widget.doctorProfileId,
+                  date: dateStr,
+                )));
               }
             },
             child: Container(
@@ -276,8 +296,16 @@ class _SlotSelectionBottomSheetState extends ConsumerState<SlotSelectionBottomSh
               onPressed: _selectedSlot == null 
                 ? null 
                 : () {
-                    // TODO: Navigation to booking form
-                    Navigator.pop(context);
+                    final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
+                    context.push(
+                      '/booking-form',
+                      extra: {
+                        'date': dateStr,
+                        'startTime': _selectedSlot,
+                        'doctorProfileId': widget.doctorProfileId,
+                        'doctorName': widget.doctorName,
+                      },
+                    );
                   },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,

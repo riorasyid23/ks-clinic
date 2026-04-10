@@ -13,6 +13,33 @@ class BookingDoctor {
   }
 }
 
+/// Represents a status update in the booking timeline.
+class BookingStatusUpdate {
+  final String id;
+  final String status;
+  final String note;
+  final String createdBy;
+  final DateTime createdAt;
+
+  const BookingStatusUpdate({
+    required this.id,
+    required this.status,
+    required this.note,
+    required this.createdBy,
+    required this.createdAt,
+  });
+
+  factory BookingStatusUpdate.fromJson(Map<String, dynamic> json) {
+    return BookingStatusUpdate(
+      id: json['id'] as String,
+      status: json['status'] as String,
+      note: json['note'] as String,
+      createdBy: json['createdBy'] as String,
+      createdAt: DateTime.parse(json['createdAt'] as String),
+    );
+  }
+}
+
 /// Represents a single booking/appointment from the API.
 class Booking {
   final String id;
@@ -21,8 +48,10 @@ class Booking {
   final String endTime;
   final String currentStatus;
   final String? reason;
+  final String? notes;
   final BookingDoctor doctor;
   final DateTime createdAt;
+  final List<BookingStatusUpdate> statusTimeline;
 
   const Booking({
     required this.id,
@@ -31,8 +60,10 @@ class Booking {
     required this.endTime,
     required this.currentStatus,
     this.reason,
+    this.notes,
     required this.doctor,
     required this.createdAt,
+    this.statusTimeline = const [],
   });
 
   factory Booking.fromJson(Map<String, dynamic> json) {
@@ -43,8 +74,13 @@ class Booking {
       endTime: json['endTime'] as String,
       currentStatus: json['currentStatus'] as String,
       reason: json['reason'] as String?,
+      notes: json['notes'] as String?,
       doctor: BookingDoctor.fromJson(json['doctor'] as Map<String, dynamic>),
       createdAt: DateTime.parse(json['createdAt'] as String),
+      statusTimeline: (json['statusTimeline'] as List<dynamic>?)
+              ?.map((t) => BookingStatusUpdate.fromJson(t as Map<String, dynamic>))
+              .toList() ??
+          [],
     );
   }
 }

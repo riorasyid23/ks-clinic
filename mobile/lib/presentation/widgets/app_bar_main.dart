@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 
 class AppBarMain extends StatelessWidget implements PreferredSizeWidget {
@@ -41,7 +42,14 @@ class AppBarMain extends StatelessWidget implements PreferredSizeWidget {
               border: Border.all(color: AppColors.primaryFixed, width: 2),
               color: AppColors.surfaceContainerHigh,
             ),
-            child: const Icon(Icons.person, color: AppColors.primaryContainer),
+            // child: const Icon(Icons.person, color: AppColors.primaryContainer),
+            child: InkWell(
+              onTap: () => context.push('/profile'),
+              child: const Icon(
+                Icons.person,
+                color: AppColors.primaryContainer,
+              ),
+            ),
           ),
         ),
       ],

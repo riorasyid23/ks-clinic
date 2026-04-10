@@ -8,6 +8,8 @@ class CustomTextField extends StatelessWidget {
   final TextEditingController? controller;
   final Widget? prefixIcon;
   final Widget? suffixIcon;
+  final String? hintText;
+  final int maxLines;
 
   const CustomTextField({
     super.key,
@@ -17,6 +19,8 @@ class CustomTextField extends StatelessWidget {
     this.controller,
     this.prefixIcon,
     this.suffixIcon,
+    this.hintText,
+    this.maxLines = 1,
   });
 
   @override
@@ -48,6 +52,7 @@ class CustomTextField extends StatelessWidget {
                 controller: controller,
                 obscureText: obscureText,
                 keyboardType: keyboardType,
+                maxLines: maxLines,
                 style: textTheme.bodyLarge?.copyWith(
                   fontWeight: FontWeight.w500,
                   color: AppColors.onSurface,
@@ -55,6 +60,10 @@ class CustomTextField extends StatelessWidget {
                 decoration: InputDecoration(
                   prefixIcon: prefixIcon,
                   suffixIcon: suffixIcon,
+                  hintText: hintText,
+                  hintStyle: textTheme.bodyMedium?.copyWith(
+                    color: AppColors.onSurfaceVariant.withValues(alpha: 0.5),
+                  ),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 16,

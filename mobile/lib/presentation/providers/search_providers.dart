@@ -116,7 +116,7 @@ class DoctorSlotParams {
 
 /// Fetches available slots for a doctor on a specific date.
 final doctorSlotsProvider =
-    FutureProvider.family<SlotResult, DoctorSlotParams>((ref, params) async {
+    FutureProvider.autoDispose.family<SlotResult, DoctorSlotParams>((ref, params) async {
   final repo = ref.read(searchRepositoryProvider);
   return repo.getDoctorSlots(
     doctorProfileId: params.doctorProfileId,

@@ -3,8 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:medisify/presentation/providers/auth_providers.dart';
 import 'package:medisify/presentation/widgets/app_bar_main.dart';
+import 'package:intl/intl.dart';
 import '../../core/theme/app_colors.dart';
 import '../widgets/bottom_nav_bar.dart';
+import '../providers/booking_providers.dart';
+import '../../data/models/booking_model.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -18,6 +21,8 @@ class HomeScreen extends ConsumerWidget {
     final profile = user?.profile;
     final displayName = profile?.name ?? 'Patient';
 
+    final nearestAppointmentAsync = ref.watch(nearestAppointmentProvider);
+
     return Scaffold(
       backgroundColor: AppColors.surface,
       appBar: AppBarMain(),
@@ -29,17 +34,20 @@ class HomeScreen extends ConsumerWidget {
             children: [
               _buildGreeting(textTheme, displayName),
               const SizedBox(height: 32),
-              _buildCTA(),
+              _buildCTA(context),
               const SizedBox(height: 32),
-              _buildNextAppointment(textTheme),
-              const SizedBox(height: 48), // Padding for bottom nav
-              InkWell(
-                onTap: () {
-                  // Navigator.pushNamed(context, '/');
-                  context.go('/');
-                },
-                child: const Text('Test Splash Screen'),
+              _buildNextAppointment(
+                context,
+                textTheme,
+                nearestAppointmentAsync,
               ),
+              // const SizedBox(height: 32),
+              // _buildServices(textTheme),
+              // const SizedBox(height: 32),
+              // _buildVitality(textTheme),
+              // const SizedBox(height: 32),
+              // _buildRecentDoctors(textTheme),
+              const SizedBox(height: 48), // Padding for bottom nav
             ],
           ),
         ),
@@ -81,7 +89,7 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildCTA() {
+  Widget _buildCTA(BuildContext context) {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -103,7 +111,7 @@ class HomeScreen extends ConsumerWidget {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(100),
-          onTap: () {},
+          onTap: () => context.push('/search'),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
             child: Row(
@@ -137,113 +145,198 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildNextAppointment(TextTheme textTheme) {
+  Widget _buildNextAppointment(
+    BuildContext context,
+    TextTheme textTheme,
+    AsyncValue<Booking?> asyncResult,
+  ) {
+    return asyncResult.when(
+      loading: () => _buildShimmerAppointment(),
+      error: (err, _) => const SizedBox.shrink(),
+      data: (booking) {
+        if (booking == null) {
+          return _buildNoAppointmentCTA(context, textTheme);
+        }
+
+        final dateFormat = DateFormat('MMM d, yyyy');
+        return InkWell(
+          onTap: () => context.push('/booking-details/${booking.id}'),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: AppColors.secondaryContainer,
+              borderRadius: BorderRadius.circular(32),
+              border: Border.all(
+                color: AppColors.outlineVariant.withValues(alpha: 0.15),
+              ),
+            ),
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Positioned(
+                  top: -16,
+                  right: -16,
+                  child: Icon(
+                    Icons.event_available,
+                    size: 100,
+                    color: AppColors.primary.withValues(alpha: 0.05),
+                  ),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 64,
+                          height: 64,
+                          decoration: const BoxDecoration(
+                            color: AppColors.primaryFixed,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.medical_services_outlined,
+                            color: AppColors.primary,
+                            size: 32,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Text(
+                                    'NEXT APPOINTMENT',
+                                    style: textTheme.labelSmall?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.secondary,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    width: 4,
+                                    height: 4,
+                                    decoration: const BoxDecoration(
+                                      color: AppColors.outlineVariant,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    booking.currentStatus,
+                                    style: textTheme.labelSmall?.copyWith(
+                                      color: AppColors.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                booking.doctor.name ?? 'Unknown Doctor',
+                                style: textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.w900,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                booking.doctor.specialty ?? 'Generalist',
+                                style: textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w500,
+                                  color: AppColors.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 8,
+                      children: [
+                        _buildTag(
+                          Icons.calendar_today,
+                          dateFormat.format(booking.date),
+                          textTheme,
+                        ),
+                        _buildTag(
+                          Icons.schedule,
+                          '${booking.startTime} - ${booking.endTime}',
+                          textTheme,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildNoAppointmentCTA(BuildContext context, TextTheme textTheme) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: AppColors.secondaryContainer,
+        color: AppColors.surfaceContainerLow,
         borderRadius: BorderRadius.circular(32),
         border: Border.all(
           color: AppColors.outlineVariant.withValues(alpha: 0.15),
         ),
       ),
-      child: Stack(
-        clipBehavior: Clip.none,
+      child: Column(
         children: [
-          Positioned(
-            top: -16,
-            right: -16,
-            child: Icon(
-              Icons.event_available,
-              size: 100,
-              color: AppColors.primary.withValues(alpha: 0.05),
+          const Icon(
+            Icons.calendar_today_outlined,
+            size: 48,
+            color: AppColors.outlineVariant,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'No upcoming appointments',
+            style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Keep your health journey on track. Schedule a consultation with our experienced doctors today.',
+            textAlign: TextAlign.center,
+            style: textTheme.bodySmall?.copyWith(
+              color: AppColors.onSurfaceVariant,
             ),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: 64,
-                    height: 64,
-                    decoration: const BoxDecoration(
-                      color: AppColors.primaryFixed,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.medical_services_outlined,
-                      color: AppColors.primary,
-                      size: 32,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Text(
-                              'NEXT APPOINTMENT',
-                              style: textTheme.labelSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.secondary,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Container(
-                              width: 4,
-                              height: 4,
-                              decoration: const BoxDecoration(
-                                color: AppColors.outlineVariant,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Confirmed',
-                              style: textTheme.labelSmall?.copyWith(
-                                color: AppColors.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          'Dr. Sarah Jenkins',
-                          style: textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w900,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          'Senior Cardiologist',
-                          style: textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w500,
-                            color: AppColors.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+          const SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: () => context.push('/search'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(100),
               ),
-              const SizedBox(height: 24),
-              Wrap(
-                spacing: 12,
-                runSpacing: 8,
-                children: [
-                  _buildTag(Icons.calendar_today, 'Oct 24, 2023', textTheme),
-                  _buildTag(Icons.schedule, '09:30 AM', textTheme),
-                ],
-              ),
-            ],
+            ),
+            child: const Text('Make Appointment Today'),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildShimmerAppointment() {
+    return Container(
+      width: double.infinity,
+      height: 180,
+      decoration: BoxDecoration(
+        color: AppColors.secondaryContainer.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(32),
+      ),
+      child: const Center(child: CircularProgressIndicator()),
     );
   }
 

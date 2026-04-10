@@ -2,10 +2,15 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/user_model.dart';
 import '../../data/repositories/auth_repository.dart';
+import '../../data/repositories/user_repository.dart';
 
 /// Provides the singleton [AuthRepository].
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return AuthRepository();
+});
+
+final userRepositoryProvider = Provider<UserRepository>((ref) {
+  return UserRepository();
 });
 
 /// Holds the current authentication state managed by [AuthNotifier].
@@ -106,5 +111,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
 
     return true;
+  }
+
+  /// Updates the currently authenticated user state.
+  void updateAuthUser(User newUser) {
+    if (state is AuthAuthenticated) {
+      final current = state as AuthAuthenticated;
+      state = AuthAuthenticated(user: newUser, token: current.token);
+    }
   }
 }

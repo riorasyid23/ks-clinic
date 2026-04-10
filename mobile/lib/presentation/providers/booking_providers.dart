@@ -13,3 +13,16 @@ final bookingsProvider = FutureProvider<List<Booking>>((ref) async {
   final repo = ref.read(bookingRepositoryProvider);
   return repo.getPatientBookings();
 });
+
+/// Async provider that fetches a single booking's details.
+final bookingDetailsProvider =
+    FutureProvider.family<Booking, String>((ref, bookingId) async {
+  final repo = ref.read(bookingRepositoryProvider);
+  return repo.getBookingDetails(bookingId);
+});
+
+/// Async provider that fetches the patient's nearest upcoming appointment.
+final nearestAppointmentProvider = FutureProvider<Booking?>((ref) async {
+  final repo = ref.read(bookingRepositoryProvider);
+  return repo.getNearestAppointment();
+});

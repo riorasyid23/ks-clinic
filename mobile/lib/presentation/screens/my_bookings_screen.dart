@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../core/theme/app_colors.dart';
 import '../../data/models/booking_model.dart';
@@ -162,21 +163,25 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
               error: (error, _) => _buildErrorState(context, textTheme),
               data: (bookings) {
                 final filtered = _applyFilters(bookings);
-                if (filtered.isEmpty) {
-                  return _buildEmptyState(textTheme);
-                }
                 return RefreshIndicator(
                   onRefresh: () async {
                     ref.invalidate(bookingsProvider);
+                    return ref.read(bookingsProvider.future);
                   },
-                  child: ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-                    itemCount: filtered.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 16),
-                    itemBuilder: (context, index) {
-                      return _buildBookingCard(filtered[index], textTheme);
-                    },
-                  ),
+                  child: filtered.isEmpty 
+                    ? _buildEmptyState(textTheme) 
+                    : ListView.separated(
+                        padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+                        itemCount: filtered.length,
+                        separatorBuilder: (_, _) => const SizedBox(height: 16),
+                        itemBuilder: (context, index) {
+                          final booking = filtered[index];
+                          return GestureDetector(
+                            onTap: () => context.push('/booking-details/${booking.id}'),
+                            child: _buildBookingCard(booking, textTheme),
+                          );
+                        },
+                      ),
                 );
               },
             ),
@@ -189,7 +194,8 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
 
   Widget _buildBookingCard(Booking booking, TextTheme textTheme) {
     final statusColor = _getStatusColor(booking.currentStatus);
-    final formattedDate = DateFormat('MMM d, yyyy').format(booking.date);
+    final bookedAt = DateFormat('MMM d, yyyy').format(booking.createdAt);
+    final appointmentDate = DateFormat('dd/MM/yyyy').format(booking.date);
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -204,14 +210,15 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Date + Status badge
+          // Booked At + Status badge
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                formattedDate,
-                style: textTheme.titleMedium?.copyWith(
+                'Booked at $bookedAt',
+                style: textTheme.labelLarge?.copyWith(
                   fontWeight: FontWeight.bold,
+                  color: AppColors.onSurfaceVariant,
                 ),
               ),
               Container(
@@ -292,7 +299,7 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  '${booking.startTime} – ${booking.endTime}',
+                  '$appointmentDate | ${booking.startTime} – ${booking.endTime}',
                   style: textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
@@ -327,71 +334,83 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
   }
 
   Widget _buildEmptyState(TextTheme textTheme) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.calendar_month_outlined,
-            size: 80,
-            color: AppColors.outlineVariant.withValues(alpha: 0.5),
+    return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      child: SizedBox(
+        height: 400, // Fixed height to ensure scrollability
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.calendar_month_outlined,
+                size: 80,
+                color: AppColors.outlineVariant.withValues(alpha: 0.5),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                _searchQuery.isNotEmpty || _statusFilter != 'ALL'
+                    ? 'No matching bookings'
+                    : 'No bookings yet',
+                style: textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                _searchQuery.isNotEmpty || _statusFilter != 'ALL'
+                    ? 'Try adjusting your search or filter'
+                    : 'Book an appointment to get started',
+                style: textTheme.bodyMedium?.copyWith(
+                  color: AppColors.outlineVariant,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
-          Text(
-            _searchQuery.isNotEmpty || _statusFilter != 'ALL'
-                ? 'No matching bookings'
-                : 'No bookings yet',
-            style: textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: AppColors.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            _searchQuery.isNotEmpty || _statusFilter != 'ALL'
-                ? 'Try adjusting your search or filter'
-                : 'Book an appointment to get started',
-            style: textTheme.bodyMedium?.copyWith(
-              color: AppColors.outlineVariant,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
 
   Widget _buildErrorState(BuildContext context, TextTheme textTheme) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.error_outline,
-            size: 64,
-            color: AppColors.error.withValues(alpha: 0.5),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Failed to load bookings',
-            style: textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: AppColors.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton.icon(
-            onPressed: () => ref.invalidate(bookingsProvider),
-            icon: const Icon(Icons.refresh, size: 18),
-            label: const Text('Retry'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+    return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      child: SizedBox(
+        height: 400,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.error_outline,
+                size: 64,
+                color: AppColors.error.withValues(alpha: 0.5),
               ),
-            ),
+              const SizedBox(height: 16),
+              Text(
+                'Failed to load bookings',
+                style: textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: () => ref.invalidate(bookingsProvider),
+                icon: const Icon(Icons.refresh, size: 18),
+                label: const Text('Retry'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

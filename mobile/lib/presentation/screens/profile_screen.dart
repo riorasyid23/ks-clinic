@@ -21,12 +21,17 @@ class ProfileScreen extends ConsumerWidget {
     final displayEmail = user?.email ?? '--';
     final displayPhone = profile?.phoneNumber ?? '--';
     final displayRole = user?.role ?? 'PATIENT';
-    final displayHeight = profile?.height != null ? '${profile!.height} cm' : '-- cm';
-    final displayWeight = profile?.weight != null ? '${profile!.weight} kg' : '-- kg';
+    final displayHeight = profile?.height != null
+        ? '${profile!.height} cm'
+        : '-- cm';
+    final displayWeight = profile?.weight != null
+        ? '${profile!.weight} kg'
+        : '-- kg';
     final displayBlood = profile?.bloodType ?? '-- Type';
     final displayDob = _formatDob(profile?.dateOfBirth);
 
-    final isProfileComplete = profile?.height != null &&
+    final isProfileComplete =
+        profile?.height != null &&
         profile?.weight != null &&
         profile?.bloodType != null &&
         profile?.dateOfBirth != null;
@@ -69,10 +74,20 @@ class ProfileScreen extends ConsumerWidget {
               constraints: const BoxConstraints(maxWidth: 600),
               child: Column(
                 children: [
-                  _buildHero(textTheme, displayName, displayRole),
+                  _buildHero(context, textTheme, displayName, displayRole),
                   const SizedBox(height: 32),
-                  _buildContactInfo(Icons.mail_outline, 'Email Address', displayEmail, textTheme),
-                  _buildContactInfo(Icons.phone_outlined, 'Phone Number', displayPhone, textTheme),
+                  _buildContactInfo(
+                    Icons.mail_outline,
+                    'Email Address',
+                    displayEmail,
+                    textTheme,
+                  ),
+                  _buildContactInfo(
+                    Icons.phone_outlined,
+                    'Phone Number',
+                    displayPhone,
+                    textTheme,
+                  ),
                   const SizedBox(height: 32),
                   _buildMedicalStats(
                     textTheme,
@@ -83,7 +98,7 @@ class ProfileScreen extends ConsumerWidget {
                     isComplete: isProfileComplete,
                   ),
                   const SizedBox(height: 32),
-                  _buildAccountSettings(textTheme),
+                  _buildAccountSettings(context, textTheme),
                   const SizedBox(height: 48),
                   _buildLogoutButton(context, ref),
                   const SizedBox(height: 24),
@@ -107,7 +122,12 @@ class ProfileScreen extends ConsumerWidget {
     }
   }
 
-  Widget _buildHero(TextTheme textTheme, String name, String role) {
+  Widget _buildHero(
+    BuildContext context,
+    TextTheme textTheme,
+    String name,
+    String role,
+  ) {
     return Column(
       children: [
         Stack(
@@ -119,7 +139,11 @@ class ProfileScreen extends ConsumerWidget {
                 shape: BoxShape.circle,
                 gradient: AppColors.primaryGradient,
                 boxShadow: [
-                  BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 4))
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 10,
+                    offset: Offset(0, 4),
+                  ),
                 ],
               ),
               padding: const EdgeInsets.all(4),
@@ -138,15 +162,22 @@ class ProfileScreen extends ConsumerWidget {
             Positioned(
               bottom: 4,
               right: 4,
-              child: Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: AppColors.secondaryFixed,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.surface, width: 4),
+              child: GestureDetector(
+                onTap: () => context.push('/edit-profile'),
+                child: Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: AppColors.secondaryFixed,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.surface, width: 4),
+                  ),
+                  child: const Icon(
+                    Icons.edit,
+                    size: 16,
+                    color: AppColors.onSecondaryFixed,
+                  ),
                 ),
-                child: const Icon(Icons.edit, size: 16, color: AppColors.onSecondaryFixed),
               ),
             ),
           ],
@@ -172,7 +203,12 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildContactInfo(IconData icon, String label, String value, TextTheme textTheme) {
+  Widget _buildContactInfo(
+    IconData icon,
+    String label,
+    String value,
+    TextTheme textTheme,
+  ) {
     return Container(
       padding: const EdgeInsets.all(20),
       margin: const EdgeInsets.only(bottom: 16),
@@ -244,7 +280,9 @@ class ProfileScreen extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               decoration: BoxDecoration(
-                color: isComplete ? AppColors.secondaryFixed : AppColors.primaryFixed,
+                color: isComplete
+                    ? AppColors.secondaryFixed
+                    : AppColors.primaryFixed,
                 borderRadius: BorderRadius.circular(100),
               ),
               child: Text(
@@ -266,10 +304,34 @@ class ProfileScreen extends ConsumerWidget {
           crossAxisSpacing: 16,
           childAspectRatio: 1.8,
           children: [
-            _buildStatCard(Icons.straighten, 'Height', height, AppColors.primary, textTheme),
-            _buildStatCard(Icons.monitor_weight_outlined, 'Weight', weight, AppColors.primary, textTheme),
-            _buildStatCard(Icons.bloodtype, 'Blood', blood, AppColors.error, textTheme),
-            _buildStatCard(Icons.calendar_today, 'DOB', dob, AppColors.primary, textTheme),
+            _buildStatCard(
+              Icons.straighten,
+              'Height',
+              height,
+              AppColors.primary,
+              textTheme,
+            ),
+            _buildStatCard(
+              Icons.monitor_weight_outlined,
+              'Weight',
+              weight,
+              AppColors.primary,
+              textTheme,
+            ),
+            _buildStatCard(
+              Icons.bloodtype,
+              'Blood',
+              blood,
+              AppColors.error,
+              textTheme,
+            ),
+            _buildStatCard(
+              Icons.calendar_today,
+              'DOB',
+              dob,
+              AppColors.primary,
+              textTheme,
+            ),
           ],
         ),
         if (!isComplete) ...[
@@ -297,7 +359,13 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildStatCard(IconData icon, String title, String value, Color iconColor, TextTheme textTheme) {
+  Widget _buildStatCard(
+    IconData icon,
+    String title,
+    String value,
+    Color iconColor,
+    TextTheme textTheme,
+  ) {
     final hasData = !value.contains('--');
     return Container(
       padding: const EdgeInsets.all(16),
@@ -336,7 +404,7 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildAccountSettings(TextTheme textTheme) {
+  Widget _buildAccountSettings(BuildContext context, TextTheme textTheme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -356,13 +424,42 @@ class ProfileScreen extends ConsumerWidget {
           ),
           child: Column(
             children: [
-              _buildSettingItem(Icons.person_outline, 'Edit Profile', textTheme),
-              const Divider(height: 1, indent: 64, color: AppColors.outlineVariant),
-              _buildSettingItem(Icons.shield_outlined, 'Insurance Details', textTheme),
-              const Divider(height: 1, indent: 64, color: AppColors.outlineVariant),
-              _buildSettingItem(Icons.notifications_outlined, 'Notification Settings', textTheme),
-              const Divider(height: 1, indent: 64, color: AppColors.outlineVariant),
-              _buildSettingItem(Icons.help_outline, 'Help & Support', textTheme),
+              _buildSettingItem(
+                Icons.person_outline,
+                'Edit Profile',
+                textTheme,
+                onTap: () => context.push('/edit-profile'),
+              ),
+              const Divider(
+                height: 1,
+                indent: 64,
+                color: AppColors.outlineVariant,
+              ),
+              _buildSettingItem(
+                Icons.shield_outlined,
+                'Insurance Details',
+                textTheme,
+              ),
+              const Divider(
+                height: 1,
+                indent: 64,
+                color: AppColors.outlineVariant,
+              ),
+              _buildSettingItem(
+                Icons.notifications_outlined,
+                'Notification Settings',
+                textTheme,
+              ),
+              const Divider(
+                height: 1,
+                indent: 64,
+                color: AppColors.outlineVariant,
+              ),
+              _buildSettingItem(
+                Icons.help_outline,
+                'Help & Support',
+                textTheme,
+              ),
             ],
           ),
         ),
@@ -370,7 +467,12 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildSettingItem(IconData icon, String title, TextTheme textTheme) {
+  Widget _buildSettingItem(
+    IconData icon,
+    String title,
+    TextTheme textTheme, {
+    VoidCallback? onTap,
+  }) {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       leading: Container(
@@ -389,8 +491,11 @@ class ProfileScreen extends ConsumerWidget {
           color: AppColors.onSurface,
         ),
       ),
-      trailing: const Icon(Icons.chevron_right, color: AppColors.outlineVariant),
-      onTap: () {},
+      trailing: const Icon(
+        Icons.chevron_right,
+        color: AppColors.outlineVariant,
+      ),
+      onTap: onTap,
     );
   }
 
@@ -418,7 +523,9 @@ class ProfileScreen extends ConsumerWidget {
                     ),
                     TextButton(
                       onPressed: () => Navigator.pop(context, true),
-                      style: TextButton.styleFrom(foregroundColor: AppColors.error),
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.error,
+                      ),
                       child: const Text('Log Out'),
                     ),
                   ],
@@ -441,13 +548,16 @@ class ProfileScreen extends ConsumerWidget {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(100),
               ),
-              textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              textStyle: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
             ),
           ),
         ),
         const SizedBox(height: 24),
         Text(
-          'KS CLINIC v2.4.0 • Clinical Precision',
+          'KS CLINIC • Medisify',
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
             color: AppColors.outlineVariant,
             letterSpacing: 2,
