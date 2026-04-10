@@ -96,6 +96,7 @@ class ProfileScreen extends ConsumerWidget {
                     blood: displayBlood,
                     dob: displayDob,
                     isComplete: isProfileComplete,
+                    context: context,
                   ),
                   const SizedBox(height: 32),
                   _buildAccountSettings(context, textTheme),
@@ -263,6 +264,7 @@ class ProfileScreen extends ConsumerWidget {
     required String blood,
     required String dob,
     required bool isComplete,
+    required BuildContext context,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -340,7 +342,9 @@ class ProfileScreen extends ConsumerWidget {
             width: double.infinity,
             height: 48,
             child: ElevatedButton.icon(
-              onPressed: () {},
+              onPressed: () {
+                context.push('/edit-profile');
+              },
               icon: const Icon(Icons.add_circle_outline, size: 18),
               label: const Text('Complete Medical Profile'),
               style: ElevatedButton.styleFrom(

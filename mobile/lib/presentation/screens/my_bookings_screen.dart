@@ -7,6 +7,8 @@ import '../../data/models/booking_model.dart';
 import '../widgets/bottom_nav_bar.dart';
 import '../widgets/app_bar_main.dart';
 import '../providers/booking_providers.dart';
+import 'package:medisify/presentation/providers/auth_providers.dart';
+import 'package:medisify/presentation/providers/doctor_providers.dart';
 
 class MyBookingsScreen extends ConsumerStatefulWidget {
   const MyBookingsScreen({super.key});
@@ -27,11 +29,13 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
     'CANCELLED',
   ];
 
-  List<Booking> _applyFilters(List<Booking> bookings) {
+  List<Booking> _applyFilters(List<Booking> bookings, String role) {
     return bookings.where((b) {
-      // Search by doctor name
+      // Search by name (Doctor for patients, Patient for doctors)
+      final nameToMatch = role == 'DOCTOR' ? b.patient?.name : b.doctor?.name;
+
       final matchesSearch = _searchQuery.isEmpty ||
-          (b.doctor.name?.toLowerCase().contains(_searchQuery.toLowerCase()) ??
+          (nameToMatch?.toLowerCase().contains(_searchQuery.toLowerCase()) ??
               false);
 
       // Filter by status
@@ -45,7 +49,12 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final bookingsAsync = ref.watch(bookingsProvider);
+    final authState = ref.watch(authProvider);
+    final role = authState is AuthAuthenticated ? authState.user.role : 'PATIENT';
+
+    final bookingsAsync = role == 'DOCTOR'
+        ? ref.watch(doctorAppointmentsProvider)
+        : ref.watch(bookingsProvider);
 
     return Scaffold(
       backgroundColor: AppColors.surface,
@@ -70,14 +79,16 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
                         fontWeight: FontWeight.w500,
                         color: AppColors.onSurface,
                       ),
-                      decoration: const InputDecoration(
-                        hintText: 'Search by doctor name',
-                        prefixIcon: Icon(
+                      decoration: InputDecoration(
+                        hintText: role == 'DOCTOR'
+                            ? 'Search by patient name'
+                            : 'Search by doctor name',
+                        prefixIcon: const Icon(
                           Icons.search,
                           color: AppColors.onSurfaceVariant,
                         ),
                         border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(
+                        contentPadding: const EdgeInsets.symmetric(
                           horizontal: 16,
                           vertical: 14,
                         ),
@@ -160,42 +171,55 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
           Expanded(
             child: bookingsAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, _) => _buildErrorState(context, textTheme),
+              error: (error, _) => _buildErrorState(context, textTheme, role),
               data: (bookings) {
-                final filtered = _applyFilters(bookings);
+                final filtered = _applyFilters(bookings, role);
                 return RefreshIndicator(
                   onRefresh: () async {
-                    ref.invalidate(bookingsProvider);
-                    return ref.read(bookingsProvider.future);
+                    if (role == 'DOCTOR') {
+                      ref.invalidate(doctorAppointmentsProvider);
+                      return ref.read(doctorAppointmentsProvider.future);
+                    } else {
+                      ref.invalidate(bookingsProvider);
+                      return ref.read(bookingsProvider.future);
+                    }
                   },
-                  child: filtered.isEmpty 
-                    ? _buildEmptyState(textTheme) 
-                    : ListView.separated(
-                        padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-                        itemCount: filtered.length,
-                        separatorBuilder: (_, _) => const SizedBox(height: 16),
-                        itemBuilder: (context, index) {
-                          final booking = filtered[index];
-                          return GestureDetector(
-                            onTap: () => context.push('/booking-details/${booking.id}'),
-                            child: _buildBookingCard(booking, textTheme),
-                          );
-                        },
-                      ),
+                  child: filtered.isEmpty
+                      ? _buildEmptyState(textTheme)
+                      : ListView.separated(
+                          padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+                          itemCount: filtered.length,
+                          separatorBuilder: (_, _) => const SizedBox(height: 16),
+                          itemBuilder: (context, index) {
+                            final booking = filtered[index];
+                            return GestureDetector(
+                              onTap: () => context.push('/booking-details/${booking.id}'),
+                              child: _buildBookingCard(booking, textTheme, role),
+                            );
+                          },
+                        ),
                 );
               },
             ),
           ),
         ],
       ),
-      bottomNavigationBar: const BottomNavBar(currentIndex: 2),
+      bottomNavigationBar: BottomNavBar(currentIndex: role == 'DOCTOR' ? 1 : 2),
     );
   }
 
-  Widget _buildBookingCard(Booking booking, TextTheme textTheme) {
+  Widget _buildBookingCard(Booking booking, TextTheme textTheme, String role) {
     final statusColor = _getStatusColor(booking.currentStatus);
     final bookedAt = DateFormat('MMM d, yyyy').format(booking.createdAt);
     final appointmentDate = DateFormat('dd/MM/yyyy').format(booking.date);
+
+    final displayName = role == 'DOCTOR'
+        ? (booking.patient?.name ?? 'Unknown Patient')
+        : (booking.doctor?.name ?? 'Unknown Doctor');
+
+    final subText = role == 'DOCTOR'
+        ? (booking.patient?.bloodType != null ? 'Blood Type: ${booking.patient!.bloodType}' : null)
+        : booking.doctor?.specialty;
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -243,7 +267,7 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
           ),
           const SizedBox(height: 16),
 
-          // Doctor info
+          // User info (Patient for Doctor, Doctor for Patient)
           Row(
             children: [
               Container(
@@ -264,14 +288,14 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      booking.doctor.name ?? 'Unknown Doctor',
+                      displayName,
                       style: textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    if (booking.doctor.specialty != null)
+                    if (subText != null)
                       Text(
-                        booking.doctor.specialty!,
+                        subText,
                         style: textTheme.bodyMedium?.copyWith(
                           color: AppColors.onSurfaceVariant,
                         ),
@@ -361,7 +385,7 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
               Text(
                 _searchQuery.isNotEmpty || _statusFilter != 'ALL'
                     ? 'Try adjusting your search or filter'
-                    : 'Book an appointment to get started',
+                    : 'Your schedule will appear here',
                 style: textTheme.bodyMedium?.copyWith(
                   color: AppColors.outlineVariant,
                 ),
@@ -373,7 +397,7 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
     );
   }
 
-  Widget _buildErrorState(BuildContext context, TextTheme textTheme) {
+  Widget _buildErrorState(BuildContext context, TextTheme textTheme, String role) {
     return SingleChildScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
       child: SizedBox(
@@ -397,7 +421,13 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
               ),
               const SizedBox(height: 16),
               ElevatedButton.icon(
-                onPressed: () => ref.invalidate(bookingsProvider),
+                onPressed: () {
+                  if (role == 'DOCTOR') {
+                    ref.invalidate(doctorAppointmentsProvider);
+                  } else {
+                    ref.invalidate(bookingsProvider);
+                  }
+                },
                 icon: const Icon(Icons.refresh, size: 18),
                 label: const Text('Retry'),
                 style: ElevatedButton.styleFrom(

@@ -3,18 +3,73 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/primary_button.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/auth_providers.dart';
 
-class RegisterScreen extends StatefulWidget {
+class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
 
   @override
-  State<RegisterScreen> createState() => _RegisterScreenState();
+  ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
+class _RegisterScreenState extends ConsumerState<RegisterScreen> {
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+  final _nameController = TextEditingController();
+  final _phoneController = TextEditingController();
+
   int _currentStep = 0;
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    _nameController.dispose();
+    _phoneController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleRegister() async {
+    setState(() => _isLoading = true);
+    try {
+      final payload = {
+        'email': _emailController.text,
+        'password': _passwordController.text,
+        'confirmPassword': _confirmPasswordController.text,
+        'name': _nameController.text,
+        'phoneNumber': _phoneController.text,
+      };
+
+      await ref.read(authRepositoryProvider).register(payload);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Registration successful! Please login.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        context.go('/login');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   void _nextStep() {
     if (_currentStep < 1) {
@@ -22,8 +77,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         _currentStep++;
       });
     } else {
-      // Final submit
-      context.go('/home');
+      _handleRegister();
     }
   }
 
@@ -135,13 +189,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
           padding: const EdgeInsets.all(24),
           child: Column(
             children: [
-              const CustomTextField(
+              CustomTextField(
                 label: 'Work Email',
+                controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
               ),
               const SizedBox(height: 24),
               CustomTextField(
                 label: 'Password',
+                controller: _passwordController,
                 obscureText: !_isPasswordVisible,
                 suffixIcon: IconButton(
                   icon: Icon(
@@ -157,6 +213,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               const SizedBox(height: 24),
               CustomTextField(
                 label: 'Confirm Password',
+                controller: _confirmPasswordController,
                 obscureText: !_isConfirmPasswordVisible,
                 suffixIcon: IconButton(
                   icon: Icon(
@@ -172,7 +229,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
               ),
               const SizedBox(height: 32),
-              PrimaryButton(text: 'Next Step', onPressed: _nextStep),
+              PrimaryButton(
+                text: 'Next Step',
+                onPressed: _nextStep,
+              ),
             ],
           ),
         ),
@@ -256,15 +316,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
           padding: const EdgeInsets.all(24),
           child: Column(
             children: [
-              const CustomTextField(
+              CustomTextField(
                 label: 'Full Name',
+                controller: _nameController,
                 keyboardType: TextInputType.name,
               ),
               const SizedBox(height: 24),
-              const CustomTextField(
+              CustomTextField(
                 label: 'Phone Number',
+                controller: _phoneController,
                 keyboardType: TextInputType.phone,
-                prefixIcon: Icon(Icons.call, color: AppColors.onSurfaceVariant),
+                prefixIcon: const Icon(Icons.call, color: AppColors.onSurfaceVariant),
               ),
             ],
           ),
@@ -322,7 +384,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
         PrimaryButton(
           text: 'Complete Registration',
           icon: Icons.chevron_right,
-          onPressed: _nextStep,
+          isLoading: _isLoading,
+          onPressed: _isLoading ? null : _nextStep,
         ),
         const SizedBox(height: 16),
         PrimaryButton(

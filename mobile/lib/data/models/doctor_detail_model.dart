@@ -19,10 +19,10 @@ class DoctorSchedule {
     return DoctorSchedule(
       id: json['id'] as String? ?? '',
       doctorId: json['doctorId'] as String? ?? '',
-      dayOfWeek: json['dayOfWeek'] as int? ?? 0,
+      dayOfWeek: int.tryParse(json['dayOfWeek']?.toString() ?? '0') ?? 0,
       startTime: json['startTime'] as String? ?? '08:00',
       endTime: json['endTime'] as String? ?? '17:00',
-      slotDuration: json['slotDuration'] as int? ?? 30,
+      slotDuration: int.tryParse((json['duration'] ?? json['slotDuration'])?.toString() ?? '30') ?? 30,
     );
   }
 }

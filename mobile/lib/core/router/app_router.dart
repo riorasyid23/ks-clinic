@@ -11,6 +11,7 @@ import '../../presentation/screens/booking_form_screen.dart';
 import '../../presentation/screens/booking_details_screen.dart';
 import '../../presentation/screens/splash_screen.dart';
 import '../../presentation/screens/edit_profile_screen.dart';
+import '../../presentation/screens/availability_screen.dart';
 
 class AppRouter {
   static final router = GoRouter(
@@ -73,6 +74,10 @@ class AppRouter {
           final bookingId = state.pathParameters['bookingId']!;
           return BookingDetailsScreen(bookingId: bookingId);
         },
+      ),
+      GoRoute(
+        path: '/availability',
+        builder: (context, state) => const AvailabilityScreen(),
       ),
     ],
   );

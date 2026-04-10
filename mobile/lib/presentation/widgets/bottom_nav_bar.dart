@@ -1,14 +1,79 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:medisify/presentation/providers/auth_providers.dart';
 
-class BottomNavBar extends StatelessWidget {
+class _NavItem {
+  final IconData icon;
+  final String label;
+  final String route;
+
+  const _NavItem({
+    required this.icon,
+    required this.label,
+    required this.route,
+  });
+}
+
+class BottomNavBar extends ConsumerWidget {
   final int currentIndex;
 
   const BottomNavBar({super.key, required this.currentIndex});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authProvider);
+    final role = authState is AuthAuthenticated
+        ? authState.user.role
+        : 'PATIENT';
+
+    final List<_NavItem> items = role == 'DOCTOR'
+        ? [
+            const _NavItem(
+              icon: Icons.home_filled,
+              label: 'Home',
+              route: '/home',
+            ),
+            const _NavItem(
+              icon: Icons.calendar_month_outlined,
+              label: 'Appointment',
+              route: '/bookings',
+            ),
+            const _NavItem(
+              icon: Icons.access_time_rounded,
+              label: 'Availability',
+              route: '/availability',
+            ),
+            const _NavItem(
+              icon: Icons.person_outline,
+              label: 'Profile',
+              route: '/profile',
+            ),
+          ]
+        : [
+            const _NavItem(
+              icon: Icons.home_filled,
+              label: 'Home',
+              route: '/home',
+            ),
+            const _NavItem(
+              icon: Icons.search,
+              label: 'Search',
+              route: '/search',
+            ),
+            const _NavItem(
+              icon: Icons.calendar_month_outlined,
+              label: 'Bookings',
+              route: '/bookings',
+            ),
+            const _NavItem(
+              icon: Icons.person_outline,
+              label: 'Profile',
+              route: '/profile',
+            ),
+          ];
+
     return Container(
       height: 80,
       decoration: BoxDecoration(
@@ -19,24 +84,17 @@ class BottomNavBar extends StatelessWidget {
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          _buildNavItem(context, Icons.home_filled, 'Home', 0, '/home'),
-          _buildNavItem(context, Icons.search, 'Search', 1, '/search'),
-          _buildNavItem(
+        children: items.asMap().entries.map((entry) {
+          final index = entry.key;
+          final item = entry.value;
+          return _buildNavItem(
             context,
-            Icons.calendar_month_outlined,
-            'Bookings',
-            2,
-            '/bookings',
-          ),
-          _buildNavItem(
-            context,
-            Icons.person_outline,
-            'Profile',
-            3,
-            '/profile',
-          ),
-        ],
+            item.icon,
+            item.label,
+            index,
+            item.route,
+          );
+        }).toList(),
       ),
     );
   }
@@ -56,13 +114,21 @@ class BottomNavBar extends StatelessWidget {
           if (route == '/profile') {
             context.push(route);
           } else {
-            context.go(route);
+            // Check if route exists in router, otherwise do nothing or show toast
+            try {
+              context.go(route);
+            } catch (e) {
+              // Route might not exist yet (like /availability)
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Feature coming soon!')),
+              );
+            }
           }
         }
       },
       behavior: HitTestBehavior.opaque,
       child: SizedBox(
-        width: 80, // Fixed width for better tap target
+        width: 80,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

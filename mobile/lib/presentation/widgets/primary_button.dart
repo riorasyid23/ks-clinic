@@ -2,16 +2,18 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 
 class PrimaryButton extends StatelessWidget {
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final String text;
   final bool isSecondary;
+  final bool isLoading;
   final IconData? icon;
 
   const PrimaryButton({
     super.key,
-    required this.onPressed,
+    this.onPressed,
     required this.text,
     this.isSecondary = false,
+    this.isLoading = false,
     this.icon,
   });
 
@@ -40,27 +42,36 @@ class PrimaryButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(100),
           onTap: onPressed,
           child: Center(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (isSecondary && icon != null) ...[
-                  Icon(icon, color: AppColors.primary, size: 20),
-                  const SizedBox(width: 8),
-                ],
-                Text(
-                  text,
-                  style: TextStyle(
-                    color: isSecondary ? AppColors.onSurface : AppColors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: isSecondary ? 14 : 18,
+            child: isLoading
+                ? const SizedBox(
+                    height: 24,
+                    width: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (isSecondary && icon != null) ...[
+                        Icon(icon, color: AppColors.primary, size: 20),
+                        const SizedBox(width: 8),
+                      ],
+                      Text(
+                        text,
+                        style: TextStyle(
+                          color: isSecondary ? AppColors.onSurface : AppColors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: isSecondary ? 14 : 18,
+                        ),
+                      ),
+                      if (!isSecondary && icon != null) ...[
+                        const SizedBox(width: 8),
+                        Icon(icon, color: AppColors.white, size: 20),
+                      ],
+                    ],
                   ),
-                ),
-                if (!isSecondary && icon != null) ...[
-                  const SizedBox(width: 8),
-                  Icon(icon, color: AppColors.white, size: 20),
-                ],
-              ],
-            ),
           ),
         ),
       ),

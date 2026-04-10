@@ -14,6 +14,18 @@ class AuthRepository {
   static const _userNameKey = 'user_name';
   static const _expiryKey = 'auth_expiry';
 
+  Future<void> register(Map<String, dynamic> data) async {
+    try {
+      await _dio.post('/auth/register', data: data);
+    } on DioException catch (e) {
+      if (e.response != null && e.response!.data is Map) {
+        final msg = e.response!.data['message'] ?? 'Registration failed';
+        throw AuthException(msg.toString());
+      }
+      throw AuthException('Network error. Please check your connection.');
+    }
+  }
+
   /// Sends login credentials and returns a [LoginResponse] on success.
   Future<LoginResponse> login(String email, String password) async {
     try {

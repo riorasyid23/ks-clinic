@@ -71,8 +71,9 @@ class _BookingFormScreenState extends ConsumerState<BookingFormScreen> {
         doctorProfileId: widget.doctorProfileId,
       );
 
-      // Refresh the list
+      // Refresh the list and nearest appointment
       ref.invalidate(bookingsProvider);
+      ref.invalidate(nearestAppointmentProvider);
 
       if (!mounted) return;
 

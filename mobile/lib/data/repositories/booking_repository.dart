@@ -47,7 +47,8 @@ class BookingRepository {
       final data = response.data as Map<String, dynamic>;
       return data['booking']['id'] as String;
     } on DioException catch (e) {
-      final message = e.response?.data?['message'] ?? 'Failed to create booking';
+      final message =
+          e.response?.data?['message'] ?? 'Failed to create booking';
       throw Exception(message);
     }
   }
@@ -66,12 +67,10 @@ class BookingRepository {
   /// Cancels an existing appointment.
   Future<void> cancelAppointment(String bookingId, String note) async {
     try {
-      await _dio.delete(
-        '/encounter/$bookingId',
-        data: {'note': note},
-      );
+      await _dio.delete('/encounter/$bookingId', data: {'note': note});
     } on DioException catch (e) {
-      final message = e.response?.data?['message'] ?? 'Failed to cancel appointment';
+      final message =
+          e.response?.data?['message'] ?? 'Failed to cancel appointment';
       throw Exception(message);
     }
   }
@@ -87,6 +86,24 @@ class BookingRepository {
         return null;
       }
       throw Exception('Failed to load nearest appointment');
+    }
+  }
+
+  /// Updates the status of an appointment (Doctors only).
+  Future<void> applyStatusAppointment({
+    required String encounterId,
+    required String status,
+    required String note,
+  }) async {
+    try {
+      await _dio.post(
+        '/encounter/status-apply',
+        queryParameters: {'encounterId': encounterId, 'status': status},
+        data: {'note': note},
+      );
+    } on DioException catch (e) {
+      final message = e.response?.data?['message'] ?? 'Failed to update status';
+      throw Exception(message);
     }
   }
 }

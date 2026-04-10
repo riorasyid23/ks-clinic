@@ -9,6 +9,8 @@ import '../widgets/bottom_nav_bar.dart';
 import '../providers/booking_providers.dart';
 import '../../data/models/booking_model.dart';
 
+import 'package:medisify/presentation/providers/doctor_providers.dart';
+
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
@@ -19,40 +21,253 @@ class HomeScreen extends ConsumerWidget {
 
     final user = authState is AuthAuthenticated ? authState.user : null;
     final profile = user?.profile;
-    final displayName = profile?.name ?? 'Patient';
-
-    final nearestAppointmentAsync = ref.watch(nearestAppointmentProvider);
+    final displayName = profile?.name ?? 'User';
+    final role = user?.role ?? 'PATIENT';
 
     return Scaffold(
       backgroundColor: AppColors.surface,
-      appBar: AppBarMain(),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildGreeting(textTheme, displayName),
-              const SizedBox(height: 32),
-              _buildCTA(context),
-              const SizedBox(height: 32),
-              _buildNextAppointment(
-                context,
-                textTheme,
-                nearestAppointmentAsync,
-              ),
-              // const SizedBox(height: 32),
-              // _buildServices(textTheme),
-              // const SizedBox(height: 32),
-              // _buildVitality(textTheme),
-              // const SizedBox(height: 32),
-              // _buildRecentDoctors(textTheme),
-              const SizedBox(height: 48), // Padding for bottom nav
-            ],
+      appBar: const AppBarMain(),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          if (role == 'DOCTOR') {
+            return ref.refresh(doctorInsightsProvider);
+          } else {
+            return ref.refresh(nearestAppointmentProvider);
+          }
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 24.0,
+              vertical: 24.0,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildGreeting(textTheme, displayName),
+                const SizedBox(height: 32),
+                if (role == 'DOCTOR')
+                  _buildDoctorDashboard(context, ref, textTheme)
+                else
+                  _buildPatientDashboard(context, ref, textTheme),
+                const SizedBox(height: 48), // Padding for bottom nav
+              ],
+            ),
           ),
         ),
       ),
       bottomNavigationBar: const BottomNavBar(currentIndex: 0),
+    );
+  }
+
+  Widget _buildPatientDashboard(
+    BuildContext context,
+    WidgetRef ref,
+    TextTheme textTheme,
+  ) {
+    final nearestAppointmentAsync = ref.watch(nearestAppointmentProvider);
+    return Column(
+      children: [
+        _buildCTA(context),
+        const SizedBox(height: 32),
+        _buildNextAppointment(context, textTheme, nearestAppointmentAsync),
+      ],
+    );
+  }
+
+  Widget _buildDoctorDashboard(
+    BuildContext context,
+    WidgetRef ref,
+    TextTheme textTheme,
+  ) {
+    final insightsAsync = ref.watch(doctorInsightsProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Operational Insights',
+          style: textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: AppColors.onSurface,
+          ),
+        ),
+        const SizedBox(height: 16),
+        insightsAsync.when(
+          data: (data) => _buildStatusGrid(context, data),
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (err, stack) =>
+              Center(child: Text('Error loading insights: $err')),
+        ),
+        const SizedBox(height: 32),
+        _buildDashboardActions(context, textTheme),
+      ],
+    );
+  }
+
+  Widget _buildStatusGrid(BuildContext context, Map<String, dynamic> data) {
+    return GridView.count(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisCount: 2,
+      crossAxisSpacing: 16,
+      mainAxisSpacing: 16,
+      childAspectRatio: 1.5,
+      children: [
+        _buildStatusCard(
+          'Today',
+          data['todayAppointmentTotal']?.toString() ?? '0',
+          AppColors.primary,
+          Icons.today,
+        ),
+        _buildStatusCard(
+          'Pending',
+          data['pendingAppointmentTotal']?.toString() ?? '0',
+          Colors.orange,
+          Icons.pending_actions,
+        ),
+        _buildStatusCard(
+          'Confirmed',
+          data['confirmedAppointmentTotal']?.toString() ?? '0',
+          Colors.blue,
+          Icons.check_circle_outline,
+        ),
+        _buildStatusCard(
+          'Completed',
+          data['completedAppointmentTotal']?.toString() ?? '0',
+          Colors.green,
+          Icons.done_all,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatusCard(
+    String label,
+    String value,
+    Color color,
+    IconData icon,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withOpacity(0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Icon(icon, color: color, size: 20),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          Text(
+            label,
+            style: TextStyle(
+              color: color.withOpacity(0.8),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDashboardActions(BuildContext context, TextTheme textTheme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Quick Actions',
+          style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 16),
+        _buildActionTile(
+          context,
+          'My Appointments',
+          'View and manage your schedule',
+          Icons.calendar_month,
+          AppColors.primary,
+          () => context.go('/bookings'),
+        ),
+        const SizedBox(height: 12),
+        _buildActionTile(
+          context,
+          'Manage Availability',
+          'Update your consultation hours',
+          Icons.access_time_rounded,
+          Colors.purple,
+          () => context.go('/availability'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActionTile(
+    BuildContext context,
+    String title,
+    String subtitle,
+    IconData icon,
+    Color color,
+    VoidCallback onTap,
+  ) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceContainerHigh,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: color),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      color: AppColors.onSurfaceVariant,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: AppColors.onSurfaceVariant),
+          ],
+        ),
+      ),
     );
   }
 
@@ -152,7 +367,7 @@ class HomeScreen extends ConsumerWidget {
   ) {
     return asyncResult.when(
       loading: () => _buildShimmerAppointment(),
-      error: (err, _) => const SizedBox.shrink(),
+      error: (err, _) => _buildNoAppointmentCTA(context, textTheme),
       data: (booking) {
         if (booking == null) {
           return _buildNoAppointmentCTA(context, textTheme);
@@ -235,7 +450,7 @@ class HomeScreen extends ConsumerWidget {
                               ),
                               const SizedBox(height: 6),
                               Text(
-                                booking.doctor.name ?? 'Unknown Doctor',
+                                booking.doctor?.name ?? 'Unknown Doctor',
                                 style: textTheme.titleLarge?.copyWith(
                                   fontWeight: FontWeight.w900,
                                   color: AppColors.primary,
@@ -243,7 +458,7 @@ class HomeScreen extends ConsumerWidget {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                booking.doctor.specialty ?? 'Generalist',
+                                booking.doctor?.specialty ?? 'Generalist',
                                 style: textTheme.bodyMedium?.copyWith(
                                   fontWeight: FontWeight.w500,
                                   color: AppColors.onSurfaceVariant,
