@@ -44,8 +44,12 @@ export const getEncoPatients = async (req: Request, res: Response): Promise<void
                                 }
                             }
                         }
+                    },
+                    orderBy: {
+                        createdAt: 'desc'
                     }
-                }
+                },
+
             }
         })
 
@@ -128,6 +132,69 @@ export const getEncoDoctors = async (req: Request, res: Response): Promise<void>
     }
 }
 
+// Get Nearest Patient Appointment
+export const getSingleNearestPatientAppointment = async (req: Request, res: Response): Promise<void> => {
+    const userId = req.user?.userId
+    const role = req.user?.role
+
+    if (role !== 'PATIENT') {
+        unauthorized("For Patient Only")
+    }
+
+    try {
+        const patientProfile = await prisma.patientProfile.findUnique({
+            where: {
+                userId: userId as string
+            },
+            include: {
+                appointments: {
+                    where: {
+                        date: {
+                            gte: new Date()
+                        },
+                        currentStatus: {
+                            notIn: ['CANCELLED', 'COMPLETED']
+                        }
+                    },
+                    include: {
+                        doctor: true
+                    },
+                    orderBy: {
+                        date: 'asc'
+                    }
+                }
+            }
+        })
+
+        const today = new Date()
+        const currentHour = today.getHours()
+        const currentMinute = today.getMinutes()
+
+        const currentTime = `${currentHour}:${currentMinute}`
+        const timeNow = parse(currentTime, 'HH:mm', new Date())
+
+        const nearestAppointment = patientProfile?.appointments.find((a) => {
+            const appointmentDate = new Date(a.date)
+            const appointmentTime = parse(a.startTime, 'HH:mm', new Date())
+            return appointmentDate >= today
+        })
+
+        if (!nearestAppointment) {
+            return notFound('Patient Appointments')
+        }
+
+        res.status(200).json({
+            message: 'Next Appointment Data retrieved!',
+            bookings: nearestAppointment
+        })
+    } catch (error) {
+        if (isAppError(error)) {
+            throw error;
+        }
+        databaseError(error as Error);
+    }
+}
+
 export const getEncoDetails = async (req: Request, res: Response): Promise<void> => {
     const { encounterId } = req.params
 
@@ -141,7 +208,20 @@ export const getEncoDetails = async (req: Request, res: Response): Promise<void>
                 id: encounterId as string
             },
             include: {
-                statusTimeline: true
+                statusTimeline: {
+                    orderBy: {
+                        createdAt: 'desc'
+                    }
+                },
+                doctor: {
+                    include: {
+                        user: {
+                            include: {
+                                doctorProfile: true
+                            }
+                        }
+                    }
+                }
             }
         })
 
@@ -151,7 +231,22 @@ export const getEncoDetails = async (req: Request, res: Response): Promise<void>
 
         res.status(200).json({
             message: "Appointment data found!",
-            details: encounter
+            details: {
+                id: encounter.id,
+                date: encounter.date,
+                startTime: encounter.startTime,
+                endTime: encounter.endTime,
+                currentStatus: encounter.currentStatus,
+                reason: encounter.reason,
+                notes: encounter.notes,
+                createdAt: encounter.createdAt,
+                doctor: {
+                    name: encounter.doctor.user.doctorProfile?.name,
+                    specialty: encounter.doctor.user.doctorProfile?.specialty,
+                    phone: encounter.doctor.user.doctorProfile?.phoneNumber,
+                },
+                statusTimeline: encounter.statusTimeline,
+            }
         })
 
     } catch (error) {

@@ -286,6 +286,8 @@ export const getAvailableAppointmentSlots = async (req: Request, res: Response):
             existingBookings
         );
 
+        console.log("Success in getting available slots")
+
         res.status(200).json({
             message: 'Available appointment slots retrieved successfully',
             availableSlots: slots.availableSlots,
